@@ -10,7 +10,8 @@ const ProductShowcase = () => {
       description: "Moderní kalendář s přehledným rozhraním pro kadeřnické salóny",
       image: "/images/showcase/hair-salon-dashboard.jpg",
       client: "MS Studio Hair",
-      category: "Kadeřnictví"
+      category: "Kadeřnictví",
+      mockup: "calendar"
     },
     {
       id: 2,
@@ -18,7 +19,8 @@ const ProductShowcase = () => {
       description: "Jednoduché rezervace pro barbershopy s mobilní aplikací",
       image: "/images/showcase/barbershop-mobile.jpg",
       client: "Nastříženo Barber",
-      category: "Barbershop"
+      category: "Barbershop",
+      mockup: "mobile"
     },
     {
       id: 3,
@@ -26,7 +28,8 @@ const ProductShowcase = () => {
       description: "Komplexní systém pro wellness a masáže s online platbami",
       image: "/images/showcase/wellness-calendar.jpg",
       client: "Wellness Centrum",
-      category: "Wellness"
+      category: "Wellness",
+      mockup: "calendar"
     },
     {
       id: 4,
@@ -34,7 +37,8 @@ const ProductShowcase = () => {
       description: "Stylový systém pro restaurace s možností výběru stolů",
       image: "/images/showcase/restaurant-booking.jpg",
       client: "Restaurace U Nováků",
-      category: "Restaurace"
+      category: "Restaurace",
+      mockup: "desktop"
     },
     {
       id: 5,
@@ -42,7 +46,8 @@ const ProductShowcase = () => {
       description: "Rezervace lekcí a trenérů s automatickými připomínkami",
       image: "/images/showcase/fitness-classes.jpg",
       client: "FitZone Studio",
-      category: "Fitness"
+      category: "Fitness",
+      mockup: "calendar"
     }
   ]
 
