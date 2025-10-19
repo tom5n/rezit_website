@@ -66,7 +66,7 @@ const ProblemSolution = () => {
     setShowResults(true)
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('cs-CZ', {
       style: 'currency',
       currency: 'CZK',
