@@ -9,7 +9,7 @@ const ProblemSolution = () => {
     comparisonYears: '3'
   })
   
-  const [results, setResults] = useState(null)
+  const [results, setResults] = useState<any>(null)
   const [showResults, setShowResults] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
