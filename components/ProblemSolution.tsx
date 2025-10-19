@@ -12,7 +12,7 @@ const ProblemSolution = () => {
   const [results, setResults] = useState<any>(null)
   const [showResults, setShowResults] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
