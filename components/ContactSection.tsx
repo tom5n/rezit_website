@@ -28,10 +28,10 @@ const ContactSection = () => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const animationType = entry.target.getAttribute('data-animation')
-            if (animationType && animations[animationType] !== undefined) {
+            if (animationType && animationType in animations) {
               setAnimations(prev => ({
                 ...prev,
-                [animationType]: true
+                [animationType as keyof typeof animations]: true
               }))
             }
           }
