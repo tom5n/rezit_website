@@ -28,7 +28,7 @@ const Footer = () => {
                 }}>
                 </a>
                 <a href="mailto:info@rezit.cz" className="w-6 h-6 bg-gray-600 hover:bg-primary-500 transition-colors duration-300 mask-email" style={{
-                  WebKitMask: 'url(/images/assets/email.svg) no-repeat center',
+                  WebkitMask: 'url(/images/assets/email.svg) no-repeat center',
                   mask: 'url(/images/assets/email.svg) no-repeat center',
                   WebkitMaskSize: 'contain',
                   maskSize: 'contain'
