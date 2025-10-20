@@ -186,3 +186,10 @@ const AdminStats = () => {
 }
 
 export default AdminStats
+
+// Zabránit předrenderování - data se načtou až na client-side
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}
