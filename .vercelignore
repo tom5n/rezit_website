@@ -1,0 +1,8 @@
+# Ignore large files that aren't needed for production
+public/images/*.psd
+public/images/assets/*.zip
+public/images/screenshots/**/*.png
+public/images/screenshots/**/*.jpg
+public/images/portfolio/*.png
+public/images/portfolio/*.jpg
+public/images/testimonials/*.jpg

@@ -1,13 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://kmaphjllonhkprofophw.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseAnonKey) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
+// Lazy loading Supabase klienta
+let supabaseClient: any = null
+
+export const getSupabaseClient = () => {
+  if (!supabaseClient) {
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!supabaseAnonKey) {
+      throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+  }
+  
+  return supabaseClient
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = getSupabaseClient()
 
 // Typy pro TypeScript
 export interface CalculatorSubmission {

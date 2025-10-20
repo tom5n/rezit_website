@@ -85,10 +85,3 @@ export default function Cookies() {
     </Layout>
   )
 }
-
-// Explicit export for static generation
-export async function getStaticProps() {
-  return {
-    props: {},
-  }
-}
