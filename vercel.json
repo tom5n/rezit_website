@@ -5,8 +5,7 @@
   "regions": ["fra1"],
   "functions": {
     "pages/api/**/*.js": {
-      "maxDuration": 30,
-      "regions": ["fra1"]
+      "maxDuration": 30
     }
   },
   "headers": [
