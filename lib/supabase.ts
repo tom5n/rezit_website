@@ -1,9 +1,13 @@
-// Dočasně zakázáno kvůli problémům s deployem
-export const supabase = null
+import { createClient } from '@supabase/supabase-js'
 
-export const getSupabaseClient = () => {
-  throw new Error('Supabase dočasně zakázáno')
+const supabaseUrl = 'https://kmaphjllonhkprofophw.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseAnonKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 }
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Typy pro TypeScript
 export interface CalculatorSubmission {

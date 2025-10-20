@@ -26,8 +26,18 @@ const AdminLogin = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary-500 to-primary-700">
-      <div className="max-w-md w-full">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: 'url(/images/loginbackground.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Tmavý overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+      <div className="max-w-md w-full relative z-10">
         {/* Login Box */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           {/* Logo uvnitř boxu */}

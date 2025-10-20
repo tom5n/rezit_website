@@ -43,8 +43,34 @@ export interface ContactSubmission {
 
 export async function saveCalculatorData(data: CalculatorData): Promise<{ success: boolean; error?: string }> {
   try {
-    // Dočasně zakázáno kvůli problémům s deployem
-    console.log('Calculator data (dočasně zakázáno):', data)
+    const submission: Omit<CalculatorSubmission, 'id' | 'created_at'> = {
+      business_name: data.formData.businessName || undefined,
+      service_name: data.formData.serviceName || undefined,
+      monthly_fee: parseFloat(data.formData.monthlyFee),
+      fee_percentage: parseFloat(data.formData.feePercentage),
+      monthly_revenue: parseFloat(data.formData.monthlyRevenue),
+      annual_competitor_costs: data.calculationResults.annualCompetitorCosts,
+      annual_savings: data.calculationResults.annualSavings,
+      five_year_savings: data.calculationResults.fiveYearSavings,
+      rezit_price: data.calculationResults.rezitPrice,
+      payback_months: data.calculationResults.paybackMonths,
+      scenario: data.calculationResults.scenario,
+      show_savings: data.calculationResults.showSavings,
+      show_five_year_savings: data.calculationResults.showFiveYearSavings,
+      message: data.calculationResults.message || undefined,
+      ip_address: undefined, // Můžeme přidat později pokud bude potřeba
+      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined
+    }
+
+    const { error } = await supabase
+      .from('calculator_submissions')
+      .insert([submission])
+
+    if (error) {
+      console.error('Chyba při ukládání dat:', error)
+      return { success: false, error: error.message }
+    }
+
     return { success: true }
   } catch (error) {
     console.error('Neočekávaná chyba při ukládání:', error)
@@ -55,8 +81,17 @@ export async function saveCalculatorData(data: CalculatorData): Promise<{ succes
 // Funkce pro získání dat z kalkulačky (pro admin účely)
 export async function getCalculatorData() {
   try {
-    // Dočasně zakázáno kvůli problémům s deployem
-    return { success: true, data: [] }
+    const { data, error } = await supabase
+      .from('calculator_submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Chyba při načítání dat:', error)
+      return { success: false, error: error.message, data: [] }
+    }
+
+    return { success: true, data: data || [] }
   } catch (error) {
     console.error('Neočekávaná chyba při načítání dat:', error)
     return { success: false, error: 'Neočekávaná chyba při načítání dat', data: [] }
@@ -87,8 +122,25 @@ export function categorizeClients(submissions: CalculatorSubmission[]) {
 // Funkce pro ukládání kontaktních dat
 export async function saveContactData(data: ContactData): Promise<{ success: boolean; error?: string }> {
   try {
-    // Dočasně zakázáno kvůli problémům s deployem
-    console.log('Contact data (dočasně zakázáno):', data)
+    const submission = {
+      name: data.name,
+      email: data.email,
+      business_type: data.businessType || undefined,
+      subject: data.subject || undefined,
+      message: data.message,
+      ip_address: undefined, // Můžeme přidat později pokud bude potřeba
+      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined
+    }
+
+    const { error } = await supabase
+      .from('contact_submissions')
+      .insert([submission])
+
+    if (error) {
+      console.error('Chyba při ukládání kontaktních dat:', error)
+      return { success: false, error: error.message }
+    }
+
     return { success: true }
   } catch (error) {
     console.error('Neočekávaná chyba při ukládání kontaktních dat:', error)
@@ -99,8 +151,17 @@ export async function saveContactData(data: ContactData): Promise<{ success: boo
 // Funkce pro získání kontaktních dat (pro admin účely)
 export async function getContactData() {
   try {
-    // Dočasně zakázáno kvůli problémům s deployem
-    return { success: true, data: [] }
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Chyba při načítání kontaktních dat:', error)
+      return { success: false, error: error.message, data: [] }
+    }
+
+    return { success: true, data: data || [] }
   } catch (error) {
     console.error('Neočekávaná chyba při načítání kontaktních dat:', error)
     return { success: false, error: 'Neočekávaná chyba při načítání dat', data: [] }
