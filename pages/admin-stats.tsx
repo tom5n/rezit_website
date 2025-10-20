@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getCalculatorStats } from '../lib/calculator-db'
+import { getCalculatorData } from '../lib/calculator-db'
 
 interface CalculatorSubmission {
   id: string
@@ -33,7 +33,7 @@ const AdminStats = () => {
     setLoading(true)
     setError(null)
     
-    const result = await getCalculatorStats()
+    const result = await getCalculatorData()
     
     if (result.success && result.data) {
       setSubmissions(result.data)
