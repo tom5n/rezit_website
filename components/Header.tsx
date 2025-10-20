@@ -8,8 +8,10 @@ const Header = () => {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   
-  // Detekce, jestli jsme na cookies stránce
+  // Detekce, jestli jsme na cookies nebo ochrana údajů stránce
   const isCookiesPage = router.pathname === '/cookies'
+  const isOchranaUdajuPage = router.pathname === '/ochrana-udaju'
+  const isSimpleHeaderPage = isCookiesPage || isOchranaUdajuPage
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,8 +47,8 @@ const Header = () => {
             : 'bg-transparent backdrop-blur-none shadow-none border-transparent'
         }`}>
           <div className="flex items-center py-3 px-6">
-            {isCookiesPage ? (
-              // Cookies page header - jen zpět tlačítko a logo
+            {isSimpleHeaderPage ? (
+              // Simple header - jen zpět tlačítko a logo
               <>
                 {/* Zpět tlačítko */}
                 <a 
@@ -166,8 +168,8 @@ const Header = () => {
             : 'bg-transparent shadow-none border-b border-transparent'
         }`}>
           <div className="flex items-center justify-between py-3 px-4">
-            {isCookiesPage ? (
-              // Cookies page mobile header
+            {isSimpleHeaderPage ? (
+              // Simple mobile header
               <>
                 {/* Zpět tlačítko */}
                 <a 

@@ -19,12 +19,6 @@ export default function OchranaUdaju() {
 
             {/* Content */}
             <div className="w-full">
-              <h2 className="text-3xl font-heading font-bold text-gray-800 mb-6">Správce osobních údajů</h2>
-              <p className="text-gray-600 leading-relaxed mb-8">
-                Správcem vašich osobních údajů je společnost rezit, IČO: 12345678, se sídlem Praha, Česká republika. 
-                Kontaktní email: info@rezit.cz
-              </p>
-
               <h2 className="text-3xl font-heading font-bold text-gray-800 mb-6">Jaké údaje zpracováváme</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 V rámci poskytování našich služeb zpracováváme následující kategorie osobních údajů:
