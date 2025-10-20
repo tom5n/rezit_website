@@ -293,7 +293,7 @@ const AdminDashboard = () => {
                               {client.business_name || 'Neznámý podnik'}
                             </h3>
                             <p className="text-base text-gray-600 font-sans">
-                              {client.service_name || 'Neznámá služba'} • {formatDate(client.created_at)}
+                              {client.service_name || 'Neznámá služba'} • {client.created_at ? formatDate(client.created_at) : 'Neznámé datum'}
                             </p>
                           </div>
                           <div className="text-right">
@@ -383,7 +383,7 @@ const AdminDashboard = () => {
                               {contact.name} ({contact.email})
                             </h3>
                             <p className="text-base text-gray-600 font-sans">
-                              {contact.subject || 'Bez předmětu'} • {formatDate(contact.created_at)}
+                              {contact.subject || 'Bez předmětu'} • {contact.created_at ? formatDate(contact.created_at) : 'Neznámé datum'}
                             </p>
                           </div>
                           <div className="text-right">
