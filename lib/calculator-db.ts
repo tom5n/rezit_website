@@ -44,8 +44,8 @@ export interface ContactSubmission {
 export async function saveCalculatorData(data: CalculatorData): Promise<{ success: boolean; error?: string }> {
   try {
     const submission: Omit<CalculatorSubmission, 'id' | 'created_at'> = {
-      business_name: data.formData.businessName || null,
-      service_name: data.formData.serviceName || null,
+      business_name: data.formData.businessName || undefined,
+      service_name: data.formData.serviceName || undefined,
       monthly_fee: parseFloat(data.formData.monthlyFee),
       fee_percentage: parseFloat(data.formData.feePercentage),
       monthly_revenue: parseFloat(data.formData.monthlyRevenue),
@@ -57,9 +57,9 @@ export async function saveCalculatorData(data: CalculatorData): Promise<{ succes
       scenario: data.calculationResults.scenario,
       show_savings: data.calculationResults.showSavings,
       show_five_year_savings: data.calculationResults.showFiveYearSavings,
-      message: data.calculationResults.message || null,
-      ip_address: null, // Můžeme přidat později pokud bude potřeba
-      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null
+      message: data.calculationResults.message || undefined,
+      ip_address: undefined, // Můžeme přidat později pokud bude potřeba
+      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined
     }
 
     const { error } = await supabase
@@ -125,11 +125,11 @@ export async function saveContactData(data: ContactData): Promise<{ success: boo
     const submission = {
       name: data.name,
       email: data.email,
-      business_type: data.businessType || null,
-      subject: data.subject || null,
+      business_type: data.businessType || undefined,
+      subject: data.subject || undefined,
       message: data.message,
-      ip_address: null, // Můžeme přidat později pokud bude potřeba
-      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null
+      ip_address: undefined, // Můžeme přidat později pokud bude potřeba
+      user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined
     }
 
     const { error } = await supabase
