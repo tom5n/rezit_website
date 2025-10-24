@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const WhyChooseUs = () => {
+  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -20,37 +22,37 @@ const WhyChooseUs = () => {
           // Nadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 50)
+          }, baseDelay)
           
           // Podnadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, subtitle: true }))
-          }, 200)
+          }, baseDelay * 4)
           
           // 1. a 3. box zároveň
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, box1: true, box3: true }))
-          }, 400)
+          }, baseDelay * 8)
           
           // 2. box později
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, box2: true }))
-          }, 700)
+          }, baseDelay * 14)
           
           // Spodní 2 boxy zároveň
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, box4: true, box5: true }))
-          }, 1000)
+          }, baseDelay * 20)
           
           // CTA tlačítka
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, cta: true }))
-          }, 1300)
+          }, baseDelay * 26)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('features')
@@ -59,7 +61,7 @@ const WhyChooseUs = () => {
     }
 
     return () => observer.disconnect()
-  }, [])
+  }, [hasAnimated, baseDelay, threshold, rootMargin])
 
   const benefits = [
     {

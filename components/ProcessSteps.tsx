@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ProcessSteps = () => {
+  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     step1: false,
@@ -16,25 +18,25 @@ const ProcessSteps = () => {
           // Nadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 100)
+          }, baseDelay)
           
           // Kroky postupně
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, step1: true }))
-          }, 400)
+          }, baseDelay * 4)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, step2: true }))
-          }, 700)
+          }, baseDelay * 7)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, step3: true }))
-          }, 1000)
+          }, baseDelay * 10)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('process')
@@ -43,7 +45,7 @@ const ProcessSteps = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated])
+  }, [hasAnimated, baseDelay, threshold, rootMargin])
   return (
     <section id="process" className="section-padding bg-white">
       <div className="container-max">

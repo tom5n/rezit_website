@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ModernApp = () => {
+  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -109,22 +111,22 @@ const ModernApp = () => {
           // Nadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 100)
+          }, baseDelay)
           
           // Podnadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, subtitle: true }))
-          }, 300)
+          }, baseDelay * 3)
           
           // Galerie
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, gallery: true }))
-          }, 600)
+          }, baseDelay * 6)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('showcase')
@@ -133,7 +135,7 @@ const ModernApp = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated])
+  }, [hasAnimated, baseDelay, threshold, rootMargin])
 
   // Auto-rotate slides (paused on hover)
   useEffect(() => {

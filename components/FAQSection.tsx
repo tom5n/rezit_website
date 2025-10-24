@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const FAQSection = () => {
+  const { baseDelay, threshold, rootMargin, supportsIntersectionObserver } = useMobileOptimization()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [animations, setAnimations] = useState({
@@ -50,29 +52,51 @@ const FAQSection = () => {
 
 
   useEffect(() => {
+    if (!supportsIntersectionObserver) {
+      // Fallback pro prohlížeče bez podpory IntersectionObserver
+      setTimeout(() => {
+        setAnimations(prev => ({ ...prev, title: true }))
+      }, baseDelay)
+      
+      setTimeout(() => {
+        setAnimations(prev => ({ ...prev, subtitle: true }))
+      }, baseDelay * 3)
+      
+      setTimeout(() => {
+        setAnimations(prev => ({ ...prev, faqs: true }))
+      }, baseDelay * 6)
+      
+      setTimeout(() => {
+        setAnimations(prev => ({ ...prev, showMore: true }))
+      }, baseDelay * 9)
+      
+      setHasAnimated(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 100)
+          }, baseDelay)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, subtitle: true }))
-          }, 300)
+          }, baseDelay * 3)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, faqs: true }))
-          }, 600)
+          }, baseDelay * 6)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, showMore: true }))
-          }, 900)
+          }, baseDelay * 9)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('faq')
@@ -81,7 +105,7 @@ const FAQSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, supportsIntersectionObserver])
 
   return (
     <section id="faq" className="section-padding bg-white">

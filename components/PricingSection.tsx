@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const PricingSection = () => {
+  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -18,35 +20,35 @@ const PricingSection = () => {
           // Nadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 100)
+          }, baseDelay)
           
           // Podnadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, subtitle: true }))
-          }, 300)
+          }, baseDelay * 3)
           
           // Pricing karty postupně
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, basic: true }))
-          }, 600)
+          }, baseDelay * 6)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, premium: true }))
-          }, 900)
+          }, baseDelay * 9)
           
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, addons: true }))
-          }, 1200)
+          }, baseDelay * 12)
           
           // CTA tlačítko
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, cta: true }))
-          }, 1500)
+          }, baseDelay * 15)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('pricing')
@@ -55,7 +57,7 @@ const PricingSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated])
+  }, [hasAnimated, baseDelay, threshold, rootMargin])
   return (
     <section id="pricing" className="section-padding bg-white">
       <div className="container-max">

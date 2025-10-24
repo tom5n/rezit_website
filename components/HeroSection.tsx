@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const HeroSection = () => {
+  const { baseDelay } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title1: false,
     title2: false,
@@ -16,21 +18,21 @@ const HeroSection = () => {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setAnimations(prev => ({ ...prev, title1: true })), 100),
-      setTimeout(() => setAnimations(prev => ({ ...prev, title2: true })), 300),
-      setTimeout(() => setAnimations(prev => ({ ...prev, description: true })), 500),
-      setTimeout(() => setAnimations(prev => ({ ...prev, image: true })), 600),   // Obrázek dřív!
-      setTimeout(() => setAnimations(prev => ({ ...prev, trust1: true })), 700),  // První trust
-      setTimeout(() => setAnimations(prev => ({ ...prev, trust2: true })), 800),  // Druhý trust
-      setTimeout(() => setAnimations(prev => ({ ...prev, trust3: true })), 900),  // Třetí trust
-      setTimeout(() => setAnimations(prev => ({ ...prev, button1: true })), 1200),
-      setTimeout(() => setAnimations(prev => ({ ...prev, button2: true })), 1400),
+      setTimeout(() => setAnimations(prev => ({ ...prev, title1: true })), baseDelay),
+      setTimeout(() => setAnimations(prev => ({ ...prev, title2: true })), baseDelay * 3),
+      setTimeout(() => setAnimations(prev => ({ ...prev, description: true })), baseDelay * 5),
+      setTimeout(() => setAnimations(prev => ({ ...prev, image: true })), baseDelay * 6),
+      setTimeout(() => setAnimations(prev => ({ ...prev, trust1: true })), baseDelay * 7),
+      setTimeout(() => setAnimations(prev => ({ ...prev, trust2: true })), baseDelay * 8),
+      setTimeout(() => setAnimations(prev => ({ ...prev, trust3: true })), baseDelay * 9),
+      setTimeout(() => setAnimations(prev => ({ ...prev, button1: true })), baseDelay * 12),
+      setTimeout(() => setAnimations(prev => ({ ...prev, button2: true })), baseDelay * 14),
       // Zvětšení obrázku po dokončení všech animací
-      setTimeout(() => setImageEnlarged(true), 1800)
+      setTimeout(() => setImageEnlarged(true), baseDelay * 18)
     ]
 
     return () => timers.forEach(timer => clearTimeout(timer))
-  }, [])
+  }, [baseDelay])
   return (
     <section id="home" className="min-h-[80vh] flex items-center relative overflow-hidden pt-16 md:pt-0">
       {/* Gradient background with circular effect */}
@@ -140,84 +142,3 @@ const HeroSection = () => {
 }
 
 export default HeroSection
-
-// CSS pro animace
-const styles = `
-  @keyframes slide-in-left {
-    from {
-      opacity: 0;
-      transform: translateX(-50px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  @keyframes slide-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(50px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  @keyframes quick-popup {
-    0% {
-      opacity: 0;
-      transform: scale(0.3) translateY(30px);
-    }
-    60% {
-      opacity: 1;
-      transform: scale(1.1) translateY(-10px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-  
-  @keyframes bounce-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.3);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-    70% {
-      transform: scale(0.9);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  
-  .animate-slide-in-left {
-    animation: slide-in-left 0.8s ease-out forwards;
-  }
-  
-  .animate-slide-in-right {
-    animation: slide-in-right 0.8s ease-out forwards;
-  }
-  
-  .animate-quick-popup {
-    animation: quick-popup 0.6s ease-out forwards;
-  }
-  
-  .animate-bounce-in {
-    animation: bounce-in 0.6s ease-out forwards;
-  }
-`
-
-// Přidáme styly do head
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style')
-  styleSheet.textContent = styles
-  document.head.appendChild(styleSheet)
-}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const TestimonialsSection = () => {
+  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -47,37 +49,37 @@ const TestimonialsSection = () => {
           // Nadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, title: true }))
-          }, 100)
+          }, baseDelay)
           
           // Podnadpis
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, subtitle: true }))
-          }, 300)
+          }, baseDelay * 3)
           
           // Testimonials
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, testimonial: true }))
-          }, 600)
+          }, baseDelay * 6)
           
           // Stats - Left (zleva)
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, statsLeft: true }))
-          }, 900)
+          }, baseDelay * 9)
           
           // Stats - Center (zdola)
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, statsCenter: true }))
-          }, 1000)
+          }, baseDelay * 10)
           
           // Stats - Right (zprava)
           setTimeout(() => {
             setAnimations(prev => ({ ...prev, statsRight: true }))
-          }, 1100)
+          }, baseDelay * 11)
           
           setHasAnimated(true)
         }
       },
-      { threshold: 0.3, rootMargin: '0px 0px -100px 0px' }
+      { threshold, rootMargin }
     )
 
     const element = document.getElementById('testimonials')
@@ -86,7 +88,7 @@ const TestimonialsSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated])
+  }, [hasAnimated, baseDelay, threshold, rootMargin])
 
   return (
     <section id="testimonials" className="section-padding bg-white">
