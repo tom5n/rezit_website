@@ -51,8 +51,8 @@ const ProcessSteps = () => {
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
-            animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 ${
+            animations.title ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Jednoduchý proces, <span className="text-primary-500">rychlé výsledky</span>
           </h2>
@@ -62,7 +62,7 @@ const ProcessSteps = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Step 1 */}
           <div className={`group relative bg-white rounded-3xl p-8 border border-gray-100 hover:border-primary-200 hover:shadow-2xl transition-all duration-500 ${
-            animations.step1 ? 'animate-slide-in-left' : 'opacity-0 -translate-x-8'
+            animations.step1 ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
           }`}>
             {/* Velké číslo v pozadí */}
             <div className="absolute top-4 right-4 text-8xl font-bold text-primary-200 group-hover:text-primary-600 transition-colors duration-500">
@@ -92,7 +92,7 @@ const ProcessSteps = () => {
 
           {/* Step 2 */}
           <div className={`group relative bg-white rounded-3xl p-8 border border-gray-100 hover:border-primary-200 hover:shadow-2xl transition-all duration-500 ${
-            animations.step2 ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            animations.step2 ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             {/* Velké číslo v pozadí */}
             <div className="absolute top-4 right-4 text-8xl font-bold text-primary-200 group-hover:text-primary-600 transition-colors duration-500">
@@ -122,7 +122,7 @@ const ProcessSteps = () => {
 
           {/* Step 3 */}
           <div className={`group relative bg-white rounded-3xl p-8 border border-gray-100 hover:border-primary-200 hover:shadow-2xl transition-all duration-500 ${
-            animations.step3 ? 'animate-slide-in-right' : 'opacity-0 translate-x-8'
+            animations.step3 ? 'animate-slide-in-right' : 'pre-animate-hidden-right'
           }`}>
             {/* Velké číslo v pozadí */}
             <div className="absolute top-4 right-4 text-8xl font-bold text-primary-200 group-hover:text-primary-600 transition-colors duration-500">

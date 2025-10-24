@@ -46,20 +46,20 @@ const HeroSection = () => {
           <div className="text-center lg:text-left px-6 sm:px-8 md:px-0">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 leading-tight mb-6 sm:mb-8 text-left">
               <span className={`inline-block whitespace-nowrap transition-all duration-1000 ${
-                animations.title1 ? 'animate-slide-in-left' : 'opacity-0 -translate-x-12'
+                animations.title1 ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
               }`}>
                 Rezervační systém
               </span>
               <br />
               <span className={`inline-block transition-all duration-1000 ${
-                animations.title2 ? 'animate-slide-in-left' : 'opacity-0 -translate-x-12'
+                animations.title2 ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
               }`}>
                 <span className="text-primary-500">bez měsíčních poplatků</span>
               </span>
             </h1>
             
             <p className={`text-lg sm:text-xl text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-0 font-sans leading-relaxed text-left transition-all duration-1000 ${
-              animations.description ? 'animate-slide-in-left' : 'opacity-0 -translate-x-12'
+              animations.description ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
             }`}>
               Ušetřete tisíce ročně a mějte řešení šité na míru Vašemu podnikání.
             </p>
@@ -67,7 +67,7 @@ const HeroSection = () => {
             {/* CTA Buttons */}
             <div className="flex flex-row gap-2 sm:gap-6 justify-center lg:justify-start mb-12 sm:mb-16 w-full">
               <div className={`transition-all duration-600 ${
-                animations.button1 ? 'animate-quick-popup' : 'opacity-0 scale-30 translate-y-8'
+                animations.button1 ? 'animate-quick-popup' : 'pre-animate-hidden-scale'
               }`}>
                 <button 
                   className="btn-primary text-base sm:text-lg lg:text-xl px-4 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 w-full whitespace-nowrap font-semibold lg:font-semibold hover:scale-105 transition-transform duration-300"
@@ -77,7 +77,7 @@ const HeroSection = () => {
                 </button>
               </div>
               <div className={`transition-all duration-600 ${
-                animations.button2 ? 'animate-quick-popup' : 'opacity-0 scale-30 translate-y-8'
+                animations.button2 ? 'animate-quick-popup' : 'pre-animate-hidden-scale'
               }`}>
                 <a 
                   href="#calculator" 
@@ -91,7 +91,7 @@ const HeroSection = () => {
             {/* Trust indicators */}
             <div className="grid grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap items-center justify-center lg:justify-start gap-2 sm:gap-4 lg:gap-8 text-xs sm:text-base text-gray-500">
               <div className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap transition-all duration-600 ${
-                animations.trust1 ? 'animate-bounce-in' : 'opacity-0 scale-50'
+                animations.trust1 ? 'animate-bounce-in' : 'pre-animate-hidden-scale'
               }`}>
                 <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -101,7 +101,7 @@ const HeroSection = () => {
                 Žádné měsíční poplatky
               </div>
               <div className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap transition-all duration-600 ${
-                animations.trust2 ? 'animate-bounce-in' : 'opacity-0 scale-50'
+                animations.trust2 ? 'animate-bounce-in' : 'pre-animate-hidden-scale'
               }`}>
                 <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -111,7 +111,7 @@ const HeroSection = () => {
                 Na míru vašim službám
               </div>
               <div className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap col-span-2 lg:col-span-1 justify-center lg:justify-start transition-all duration-600 ${
-                animations.trust3 ? 'animate-bounce-in' : 'opacity-0 scale-50'
+                animations.trust3 ? 'animate-bounce-in' : 'pre-animate-hidden-scale'
               }`}>
                 <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -125,7 +125,7 @@ const HeroSection = () => {
 
           {/* Hero Image */}
           <div className={`relative transition-all duration-1000 ${
-            animations.image ? 'animate-slide-in-right' : 'opacity-0 translate-x-12'
+            animations.image ? 'animate-slide-in-right' : 'pre-animate-hidden-right'
           }`}>
             <img 
               src="/images/heroimg_rezit.webp" 

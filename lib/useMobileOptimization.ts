@@ -30,7 +30,7 @@ export const useMobileOptimization = () => {
     isIOS,
     supportsIntersectionObserver,
     baseDelay: isMobile ? 50 : 100,
-    threshold: isMobile ? 0.1 : 0.3,
-    rootMargin: isMobile ? '0px 0px -50px 0px' : '0px 0px -100px 0px'
+    threshold: isMobile ? 0.05 : 0.1, // Nižší threshold - spustí se dříve
+    rootMargin: isMobile ? '0px 0px -20px 0px' : '0px 0px -50px 0px' // Menší rootMargin - spustí se dříve
   }
 }

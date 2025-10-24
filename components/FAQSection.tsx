@@ -112,21 +112,21 @@ const FAQSection = () => {
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
-            animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 ${
+            animations.title ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Často kladené <span className="text-primary-500">otázky</span> (FAQ)
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
-            animations.subtitle ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${
+            animations.subtitle ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Najděte odpovědi na nejčastější otázky o systémech <span className="font-semibold">rezit</span>.
           </p>
         </div>
 
         {/* FAQ Accordion */}
-        <div className={`max-w-4xl mx-auto transition-all duration-500 ${
-          animations.faqs ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+        <div className={`max-w-4xl mx-auto ${
+          animations.faqs ? 'animate-fade-in-up' : 'pre-animate-hidden'
         }`}>
           <div className="space-y-6">
             {(showAll ? faqs : faqs.slice(0, 3)).map((faq, index) => (
@@ -166,8 +166,8 @@ const FAQSection = () => {
           
           {/* Show More Button */}
           {!showAll && (
-            <div className={`text-center mt-8 transition-all duration-500 ${
-              animations.showMore ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
+            <div className={`text-center mt-8 ${
+              animations.showMore ? 'animate-fade-in-up' : 'pre-animate-hidden'
             }`}>
               <button
                 onClick={() => setShowAll(true)}
