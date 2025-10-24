@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ModernApp = () => {
-  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
+  const { baseDelay, threshold, rootMargin, isMobile } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -105,6 +105,17 @@ const ModernApp = () => {
   ]
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        gallery: true
+      })
+      setHasAnimated(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
@@ -135,7 +146,7 @@ const ModernApp = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated, baseDelay, threshold, rootMargin])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
 
   // Auto-rotate slides (paused on hover)
   useEffect(() => {

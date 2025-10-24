@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const PricingSection = () => {
-  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
+  const { baseDelay, threshold, rootMargin, isMobile } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -14,6 +14,20 @@ const PricingSection = () => {
   const [hasAnimated, setHasAnimated] = useState(false)
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        basic: true,
+        premium: true,
+        addons: true,
+        cta: true
+      })
+      setHasAnimated(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
@@ -57,7 +71,7 @@ const PricingSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated, baseDelay, threshold, rootMargin])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
   return (
     <section id="pricing" className="section-padding bg-white">
       <div className="container-max">

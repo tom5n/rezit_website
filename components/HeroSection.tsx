@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const HeroSection = () => {
-  const { baseDelay } = useMobileOptimization()
+  const { baseDelay, isMobile } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title1: false,
     title2: false,
@@ -17,6 +17,23 @@ const HeroSection = () => {
   const [imageEnlarged, setImageEnlarged] = useState(false)
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title1: true,
+        title2: true,
+        description: true,
+        trust1: true,
+        trust2: true,
+        trust3: true,
+        image: true,
+        button1: true,
+        button2: true
+      })
+      setImageEnlarged(true)
+      return
+    }
+
     const timers = [
       setTimeout(() => setAnimations(prev => ({ ...prev, title1: true })), baseDelay),
       setTimeout(() => setAnimations(prev => ({ ...prev, title2: true })), baseDelay * 3),
@@ -32,7 +49,7 @@ const HeroSection = () => {
     ]
 
     return () => timers.forEach(timer => clearTimeout(timer))
-  }, [baseDelay])
+  }, [baseDelay, isMobile])
   return (
     <section id="home" className="min-h-[80vh] flex items-center relative overflow-hidden pt-16 md:pt-0">
       {/* Gradient background with circular effect */}

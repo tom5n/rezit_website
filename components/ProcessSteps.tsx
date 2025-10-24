@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ProcessSteps = () => {
-  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
+  const { baseDelay, threshold, rootMargin, isMobile } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     step1: false,
@@ -12,6 +12,18 @@ const ProcessSteps = () => {
   const [hasAnimated, setHasAnimated] = useState(false)
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        step1: true,
+        step2: true,
+        step3: true
+      })
+      setHasAnimated(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
@@ -45,7 +57,7 @@ const ProcessSteps = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated, baseDelay, threshold, rootMargin])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
   return (
     <section id="process" className="section-padding bg-white">
       <div className="container-max">

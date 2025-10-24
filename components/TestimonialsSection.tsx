@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const TestimonialsSection = () => {
-  const { baseDelay, threshold, rootMargin } = useMobileOptimization()
+  const { baseDelay, threshold, rootMargin, isMobile } = useMobileOptimization()
   const [animations, setAnimations] = useState({
     title: false,
     subtitle: false,
@@ -43,6 +43,20 @@ const TestimonialsSection = () => {
 
   // Intersection Observer for animations
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        testimonial: true,
+        statsLeft: true,
+        statsCenter: true,
+        statsRight: true
+      })
+      setHasAnimated(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
@@ -88,7 +102,7 @@ const TestimonialsSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated, baseDelay, threshold, rootMargin])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
 
   return (
     <section id="testimonials" className="section-padding bg-white">

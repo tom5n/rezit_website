@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const FAQSection = () => {
-  const { baseDelay, threshold, rootMargin, supportsIntersectionObserver } = useMobileOptimization()
+  const { baseDelay, threshold, rootMargin, supportsIntersectionObserver, isMobile } = useMobileOptimization()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [animations, setAnimations] = useState({
@@ -52,6 +52,18 @@ const FAQSection = () => {
 
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        faqs: true,
+        showMore: true
+      })
+      setHasAnimated(true)
+      return
+    }
+
     if (!supportsIntersectionObserver) {
       // Fallback pro prohlížeče bez podpory IntersectionObserver
       setTimeout(() => {
@@ -105,7 +117,7 @@ const FAQSection = () => {
     }
 
     return () => observer.disconnect()
-  }, [hasAnimated, baseDelay, threshold, rootMargin, supportsIntersectionObserver])
+  }, [hasAnimated, baseDelay, threshold, rootMargin, supportsIntersectionObserver, isMobile])
 
   return (
     <section id="faq" className="section-padding bg-white">
