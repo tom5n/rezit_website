@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { saveCalculatorData } from '../lib/calculator-db'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const Calculator = () => {
+  const { isMobile } = useMobileOptimization()
   const [formData, setFormData] = useState({
     businessName: '',
     serviceName: '',
@@ -47,6 +49,16 @@ const Calculator = () => {
 
   // Intersection Observer for animations
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        calculator: true
+      })
+      return
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -76,7 +88,7 @@ const Calculator = () => {
       if (titleElement) observer.unobserve(titleElement)
       if (calculatorElement) observer.unobserve(calculatorElement)
     }
-  }, [])
+  }, [isMobile])
 
   const calculateSavings = () => {
     setIsLoading(true)

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { saveContactData } from '../lib/calculator-db'
 import toast from 'react-hot-toast'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ContactSection = () => {
+  const { isMobile } = useMobileOptimization()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,6 +25,17 @@ const ContactSection = () => {
 
   // Intersection Observer for animations
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setAnimations({
+        title: true,
+        subtitle: true,
+        form: true,
+        contact: true
+      })
+      return
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -44,7 +57,7 @@ const ContactSection = () => {
     elements.forEach((el) => observer.observe(el))
 
     return () => observer.disconnect()
-  }, [])
+  }, [isMobile])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({

@@ -208,48 +208,24 @@
     transform: translateZ(0);
   }
 
-  /* Mobilní optimalizace - kratší animace na malých obrazovkách */
+  /* Mobilní optimalizace - úplně vypnout reveal animace na mobilních zařízeních */
   @media (max-width: 768px) {
+    /* Vypnout všechny reveal animace na mobilu - JavaScript zajistí, že prvky jsou viditelné */
     .animate-slide-in-left,
     .animate-slide-in-right,
     .animate-fade-in-up,
     .animate-bounce-in,
     .animate-quick-popup {
-      animation-duration: 0.4s;
+      animation: none !important;
     }
     
-    /* Redukce pohybu na mobilních zařízeních */
-    @keyframes slide-in-left {
-      from {
-        opacity: 0;
-        transform: translateX(-16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes slide-in-right {
-      from {
-        opacity: 0;
-        transform: translateX(16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes fade-in-up {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* Zajistit, že pre-animate-hidden prvky jsou viditelné na mobilu (jako fallback) */
+    .pre-animate-hidden,
+    .pre-animate-hidden-left,
+    .pre-animate-hidden-right,
+    .pre-animate-hidden-scale {
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 

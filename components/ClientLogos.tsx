@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useMobileOptimization } from '../lib/useMobileOptimization'
 
 const ClientLogos = () => {
+  const { isMobile } = useMobileOptimization()
   const [isVisible, setIsVisible] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -33,6 +35,12 @@ const ClientLogos = () => {
   ]
 
   useEffect(() => {
+    // Na mobilních zařízeních animace vůbec nespouštíme
+    if (isMobile) {
+      setIsVisible(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -48,7 +56,7 @@ const ClientLogos = () => {
     }
 
     return () => observer.disconnect()
-  }, [])
+  }, [isMobile])
 
   // Infinite scroll animation
   useEffect(() => {
