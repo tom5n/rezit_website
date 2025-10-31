@@ -17,12 +17,12 @@ const FAQSection = () => {
     {
       id: 1,
       question: "Kolik systémy rezit stojí?",
-      answer: "Za rezit zaplatíte jednorázovou částku – žádné měsíční poplatky ani provize z plateb. Investice se Vám často vrátí už během pár měsíců používání."
+      answer: "Za rezit zaplatíte jednorázovou částku – žádné měsíční poplatky ani provize z plateb. Cena se odvíjí od rozsahu a náročnosti požadovaného řešení. Investice se Vám často vrátí už během pár měsíců používání."
     },
     {
       id: 2,
       question: "Jak rychle můžu mít svůj rezervační systém spuštěný?",
-      answer: "Obvykle do 3–5 pracovních dnů od dodání potřebných informací. Nemusíte čekat týdny – Váš podnik může začít přijímat rezervace prakticky okamžitě."
+      answer: "Čas implementace se liší podle rozsahu a složitosti požadovaného řešení. Jednodušší varianty mohou být hotové během několika dní, zatímco komplexnější systémy vyžadují více času. Obvykle do 3–5 pracovních dnů od dodání potřebných informací, v případě rozsáhlejších řešení může být implementace delší."
     },
     {
       id: 3,
@@ -37,12 +37,12 @@ const FAQSection = () => {
     {
       id: 5,
       question: "Nabízíte technickou podporu?",
-      answer: "Ano. Součástí je základní podpora v ceně. Pokud chcete dlouhodobou technickou správu a aktualizace, nabízíme i prémiovou podporu formou měsíčního paušálu."
+      answer: "Ano, aktuálně je technická podpora součástí zakázky. Všechny zakázky zahrnují technickou podporu v ceně."
     },
     {
       id: 6,
       question: "Co když už používám jiný rezervační systém?",
-      answer: "Žádný problém. Pomůžeme Vám s přechodem a navíc si díky kalkulačce úspor můžete snadno spočítat, za jak dlouho se Vám investice do rezit vrátí."
+      answer: "Pomůžeme Vám s hladkým přechodem z Vašeho stávajícího systému. Díky kalkulačce úspor si můžete snadno spočítat, za jak dlouho se Vám investice do systému rezit vrátí."
     }
   ]
 
