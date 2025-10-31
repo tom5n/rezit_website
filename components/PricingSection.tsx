@@ -104,7 +104,13 @@ const PricingSection = () => {
                 <span className="text-lg text-gray-600 ml-2">Kč</span>
               </div>
               <p className="text-sm text-gray-600 mb-6">Pro ty, kteří chtějí jednoduchý start.</p>
-              <button className="btn-primary w-full mb-6">
+              <button 
+                className="btn-primary w-full mb-6"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 Chci vědět víc
               </button>
               <ul className="text-left space-y-3 mb-8">
@@ -162,7 +168,13 @@ const PricingSection = () => {
                 <span className="text-lg text-gray-600 ml-2">Kč</span>
               </div>
               <p className="text-sm text-gray-600 mb-6">Pro ty, kteří chtějí mít systém pod kontrolou.</p>
-              <button className="btn-primary w-full mb-6">
+              <button 
+                className="btn-primary w-full mb-6"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 Chci vědět víc
               </button>
               <ul className="text-left space-y-3 mb-8">
@@ -213,7 +225,13 @@ const PricingSection = () => {
                 <span className="text-lg text-gray-600 ml-2">Kč</span>
               </div>
               <p className="text-sm text-gray-600 mb-6">Pro ty, kteří chtějí plně vybavený systém.</p>
-              <button className="btn-primary w-full mb-6">
+              <button 
+                className="btn-primary w-full mb-6"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 Chci vědět víc
               </button>
               <ul className="text-left space-y-3 mb-8">
