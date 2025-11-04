@@ -6,6 +6,7 @@ const Calculator = () => {
   const { isMobile } = useMobileOptimization()
   const [formData, setFormData] = useState({
     businessName: '',
+    businessSize: '',
     serviceName: '',
     monthlyFee: '',
     feePercentage: '',
@@ -40,10 +41,35 @@ const Calculator = () => {
     setIsCalculated(false)
   }
 
+  // Automatický přepočet při změně velikosti podniku, pokud jsou ostatní pole vyplněná
+  useEffect(() => {
+    if (isCalculated && results && formData.businessSize) {
+      const { monthlyFee, feePercentage, monthlyRevenue } = formData
+      if (monthlyFee && feePercentage && monthlyRevenue) {
+        // Automaticky přepočítat při změně velikosti podniku
+        const timer = setTimeout(() => {
+          calculateSavings()
+        }, 300)
+        return () => clearTimeout(timer)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.businessSize])
+
+  // Mapování velikosti podniku na cenu systému
+  const getSystemPrice = (businessSize: string): number => {
+    const priceMap: { [key: string]: number } = {
+      'maly': 8000,
+      'stredni': 15000,
+      'velky': 25000
+    }
+    return priceMap[businessSize] || 15000 // Výchozí hodnota pro střední
+  }
+
   // Kontrola, jestli jsou všechna povinná pole vyplněná
   const isFormValid = () => {
-    const { monthlyFee, feePercentage, monthlyRevenue } = formData
-    return monthlyFee && feePercentage && monthlyRevenue
+    const { monthlyFee, feePercentage, monthlyRevenue, businessSize } = formData
+    return monthlyFee && feePercentage && monthlyRevenue && businessSize
   }
 
 
@@ -96,7 +122,8 @@ const Calculator = () => {
     const feePercent = parseFloat(formData.feePercentage) || 0
     const monthlyRev = parseFloat(formData.monthlyRevenue) || 0
     
-    const rezitPrice = 30000 // Pevná cena našeho systému
+    // Dynamická cena systému podle velikosti podniku
+    const rezitPrice = getSystemPrice(formData.businessSize)
     
     // Roční náklady na konkurenční službu
     const annualCompetitorCosts = (monthlyFee * 12) + (monthlyRev * (feePercent / 100) * 12)
@@ -236,27 +263,91 @@ const Calculator = () => {
               </h3>
               
               <div className="space-y-6">
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Název Vašeho podniku (volitelné)
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.businessName}
-                      onChange={(e) => handleInputChange('businessName', e.target.value)}
-                      onFocus={() => setFocusedField('businessName')}
-                      onBlur={() => setFocusedField('')}
-                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
-                        focusedField === 'businessName' 
-                          ? 'border-primary-500 bg-primary-50/50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      placeholder="Např. Black Rose Barber"
-                    />
-                    <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Název Vašeho podniku (volitelné)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.businessName}
+                        onChange={(e) => handleInputChange('businessName', e.target.value)}
+                        onFocus={() => setFocusedField('businessName')}
+                        onBlur={() => setFocusedField('')}
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                          focusedField === 'businessName' 
+                            ? 'border-primary-500 bg-primary-50/50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        placeholder="Např. Black Rose Barber"
+                      />
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Velikost podniku <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative group">
+                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block z-50">
+                          <div className="bg-gray-800 text-white text-xs rounded-lg py-2 px-3 shadow-lg w-64">
+                            <div className="mb-2">
+                              <strong className="text-primary-300">Malý:</strong> 1-2 zaměstnanci, malý provoz
+                            </div>
+                            <div className="mb-2">
+                              <strong className="text-primary-300">Střední:</strong> 3-10 zaměstnanců, střední provoz
+                            </div>
+                            <div>
+                              <strong className="text-primary-300">Velký:</strong> 10+ zaměstnanců, velký provoz
+                            </div>
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('businessSize', 'maly')}
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                          formData.businessSize === 'maly'
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        Malý
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('businessSize', 'stredni')}
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                          formData.businessSize === 'stredni'
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        Střední
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('businessSize', 'velky')}
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                          formData.businessSize === 'velky'
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        Velký
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -284,54 +375,56 @@ const Calculator = () => {
                   </div>
                 </div>
 
-                 <div className="relative">
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                     Měsíční poplatek u konkurence (Kč) *
-                   </label>
-                   <div className="relative">
-                     <input
-                       type="number"
-                       value={formData.monthlyFee}
-                       onChange={(e) => handleInputChange('monthlyFee', e.target.value)}
-                       onFocus={() => setFocusedField('monthlyFee')}
-                       onBlur={() => setFocusedField('')}
-                       className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
-                         focusedField === 'monthlyFee' 
-                           ? 'border-primary-500 bg-primary-50/50' 
-                           : 'border-gray-200 hover:border-gray-300'
-                       }`}
-                       placeholder="Např. 2500"
-                       required
-                     />
-                     <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                     </svg>
-                   </div>
-                 </div>
-
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Procentuální poplatek z plateb (%) *
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="relative">
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={formData.feePercentage}
-                      onChange={(e) => handleInputChange('feePercentage', e.target.value)}
-                      onFocus={() => setFocusedField('feePercentage')}
-                      onBlur={() => setFocusedField('')}
-                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
-                        focusedField === 'feePercentage' 
-                          ? 'border-primary-500 bg-primary-50/50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      placeholder="Např. 2.9"
-                      required
-                    />
-                    <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                    </svg>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Měsíční poplatek u konkurence (Kč) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={formData.monthlyFee}
+                        onChange={(e) => handleInputChange('monthlyFee', e.target.value)}
+                        onFocus={() => setFocusedField('monthlyFee')}
+                        onBlur={() => setFocusedField('')}
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                          focusedField === 'monthlyFee' 
+                            ? 'border-primary-500 bg-primary-50/50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        placeholder="Např. 2500"
+                        required
+                      />
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Procentuální poplatek z plateb (%) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={formData.feePercentage}
+                        onChange={(e) => handleInputChange('feePercentage', e.target.value)}
+                        onFocus={() => setFocusedField('feePercentage')}
+                        onBlur={() => setFocusedField('')}
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                          focusedField === 'feePercentage' 
+                            ? 'border-primary-500 bg-primary-50/50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        placeholder="Např. 2.9"
+                        required
+                      />
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
@@ -428,7 +521,7 @@ const Calculator = () => {
                            <div>
                              <p className="text-sm text-gray-600 mb-1">Roční úspora</p>
                              <div className="text-2xl font-bold text-gray-900">
-                               {results.annualSavings.toLocaleString()} Kč
+                               {Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč
                              </div>
                            </div>
                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -447,7 +540,7 @@ const Calculator = () => {
                          <div>
                            <p className="text-sm text-gray-600 mb-1">Úspora za 5 let</p>
                            <div className="text-2xl font-bold text-gray-900">
-                             {results.fiveYearSavings.toLocaleString()} Kč
+                             {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč
                            </div>
                          </div>
                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
