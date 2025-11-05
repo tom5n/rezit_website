@@ -137,9 +137,9 @@ const AdminDashboard = () => {
   const filteredClients = getFilteredClients()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col h-screen">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar - fixed */}
+      <div className="fixed left-0 top-0 w-64 bg-white shadow-lg flex flex-col h-screen z-10">
         <div className="p-6 border-b">
           <div className="flex items-center justify-center">
             <img 
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        <nav className="flex-1 mt-6">
+        <nav className="flex-1 mt-6 overflow-y-auto">
           <div className="px-6 py-2">
             <h2 className="text-sm font-heading font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Sekce
@@ -204,8 +204,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1">
+      {/* Main Content - scrollable */}
+      <div className="ml-64 h-screen overflow-y-auto">
         <div className="p-8">
           {activeSection === 'calculator' && (
             <div className="mb-6">
