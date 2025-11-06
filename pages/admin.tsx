@@ -448,7 +448,8 @@ const AdminDashboard = () => {
               </div>
               
               {/* Filtry potenciálu */}
-              <div className="flex gap-3 overflow-x-auto pb-2 -mx-8 px-8 md:mx-0 md:px-0 md:overflow-x-visible">
+              <div className="w-full overflow-x-hidden md:overflow-x-visible">
+                <div className="flex gap-3 overflow-x-auto pb-2 px-4 md:px-0 md:overflow-x-visible scrollbar-hide">
                 <button
                   onClick={() => setActiveTab('all')}
                   className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
@@ -514,6 +515,7 @@ const AdminDashboard = () => {
                 >
                   🗑️ Smazané ({allDeletedSubmissions.length})
                 </button>
+                </div>
               </div>
 
               {error ? (
@@ -693,7 +695,8 @@ const AdminDashboard = () => {
               </div>
 
               {/* Filtry kontaktů */}
-              <div className="flex gap-3 overflow-x-auto pb-2 -mx-8 px-8 md:mx-0 md:px-0 md:overflow-x-visible mb-6">
+              <div className="w-full overflow-x-hidden md:overflow-x-visible mb-6">
+                <div className="flex gap-3 overflow-x-auto pb-2 px-4 md:px-0 md:overflow-x-visible scrollbar-hide">
                 <button
                   onClick={() => setActiveContactTab('all')}
                   className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
@@ -726,6 +729,7 @@ const AdminDashboard = () => {
                 >
                   🗑️ Smazané ({allDeletedContacts.length})
                 </button>
+                </div>
               </div>
 
               {error ? (

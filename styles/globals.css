@@ -105,6 +105,16 @@
     @apply max-w-7xl mx-auto;
   }
 
+  /* Skrytí scrollbaru při zachování scrollování */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE a Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari a Opera */
+  }
+
   /* Animace pro ProcessSteps */
   @keyframes slide-in-left {
     from {

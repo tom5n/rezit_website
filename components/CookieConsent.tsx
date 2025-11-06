@@ -4,7 +4,6 @@ const CookieConsent: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
-    // Zkontroluj, jestli už uživatel dal souhlas
     const consent = localStorage.getItem('cookie-consent')
     if (!consent) {
       setShowBanner(true)
