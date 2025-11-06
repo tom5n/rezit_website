@@ -82,8 +82,8 @@ const HeroSection = () => {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-row gap-2 sm:gap-6 justify-center lg:justify-start mb-12 sm:mb-16 w-full">
-              <div className={`transition-all duration-600 ${
+            <div className="flex flex-row gap-2 sm:gap-6 justify-start lg:justify-start mb-12 sm:mb-16 w-full">
+              <div className={`flex-1 lg:flex-none transition-all duration-600 ${
                 animations.button1 ? 'animate-quick-popup' : 'pre-animate-hidden-scale'
               }`}>
                 <button 
@@ -93,7 +93,7 @@ const HeroSection = () => {
                   Kontaktujte nás
                 </button>
               </div>
-              <div className={`transition-all duration-600 ${
+              <div className={`flex-1 lg:flex-none transition-all duration-600 ${
                 animations.button2 ? 'animate-quick-popup' : 'pre-animate-hidden-scale'
               }`}>
                 <a 
