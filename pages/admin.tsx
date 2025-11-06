@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { getCalculatorData, categorizeClients, getContactData, markAsDeleted, toggleFavorite, markContactAsDeleted, toggleContactResolved, recoverContact } from '../lib/calculator-db'
 
+// Admin dashboard component
+
 interface CalculatorSubmission {
   id: string
   created_at: string
