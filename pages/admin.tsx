@@ -1,43 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { getCalculatorData, categorizeClients, getContactData, markAsDeleted, toggleFavorite, markContactAsDeleted, toggleContactResolved, recoverContact } from '../lib/calculator-db'
+import { getCalculatorData, categorizeClients, getContactData, markAsDeleted, toggleFavorite, markContactAsDeleted, toggleContactResolved, recoverContact, ContactSubmission } from '../lib/calculator-db'
+import { CalculatorSubmission } from '../lib/supabase'
 
 // Admin dashboard component
-
-interface CalculatorSubmission {
-  id: string
-  created_at: string
-  business_name?: string
-  service_name?: string
-  monthly_fee: number
-  fee_percentage: number
-  monthly_revenue: number
-  annual_competitor_costs: number
-  annual_savings: number
-  five_year_savings: number
-  rezit_price: number
-  payback_months: number
-  scenario: string
-  show_savings: boolean
-  show_five_year_savings: boolean
-  message?: string
-  is_deleted?: boolean
-  is_favorite?: boolean
-}
-
-interface ContactSubmission {
-  id: string
-  created_at: string
-  name: string
-  email: string
-  business_type?: string
-  subject?: string
-  message: string
-  ip_address?: string
-  user_agent?: string
-  is_deleted?: boolean
-  is_resolved?: boolean
-}
 
 const AdminDashboard = () => {
   const [submissions, setSubmissions] = useState<CalculatorSubmission[]>([])
@@ -582,7 +548,7 @@ const AdminDashboard = () => {
                       }
 
                       return (
-                        <div key={client.id}>
+                        <div key={client.id || 'unknown'}>
                           {/* Mobile Card - Compact */}
                           <div 
                             onClick={() => setSelectedClient(client)}
@@ -610,7 +576,7 @@ const AdminDashboard = () => {
                           </div>
 
                           {/* Desktop Card - Full */}
-                          <div key={client.id} className="hidden md:block bg-white rounded-lg shadow p-6 relative">
+                          <div key={client.id || 'unknown'} className="hidden md:block bg-white rounded-lg shadow p-6 relative">
                             <div className="flex justify-between items-start mb-6">
                               <div>
                                 <h3 className="text-xl font-heading font-semibold text-gray-800">
@@ -654,37 +620,41 @@ const AdminDashboard = () => {
                             {/* Action Buttons - Desktop */}
                             {!client.is_deleted && (
                               <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                                {/* Favorite Button - Desktop */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleToggleFavorite(client.id, !!client.is_favorite)
-                                  }}
-                                  className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
-                                  title={client.is_favorite ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
-                                >
-                                  <svg 
-                                    className={`w-5 h-5 transition-colors ${client.is_favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} 
-                                    fill={client.is_favorite ? 'currentColor' : 'none'} 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                  </svg>
-                                </button>
-                                {/* Delete Button - Desktop */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDelete(client.id)
-                                  }}
-                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                  title="Smazat záznam"
-                                >
-                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
+                                 {/* Favorite Button - Desktop */}
+                                 <button
+                                   onClick={(e) => {
+                                     e.stopPropagation()
+                                     if (client.id) {
+                                       handleToggleFavorite(client.id, !!client.is_favorite)
+                                     }
+                                   }}
+                                   className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+                                   title={client.is_favorite ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
+                                 >
+                                   <svg 
+                                     className={`w-5 h-5 transition-colors ${client.is_favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} 
+                                     fill={client.is_favorite ? 'currentColor' : 'none'} 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24"
+                                   >
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                   </svg>
+                                 </button>
+                                 {/* Delete Button - Desktop */}
+                                 <button
+                                   onClick={(e) => {
+                                     e.stopPropagation()
+                                     if (client.id) {
+                                       handleDelete(client.id)
+                                     }
+                                   }}
+                                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                   title="Smazat záznam"
+                                 >
+                                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                   </svg>
+                                 </button>
                               </div>
                             )}
                           </div>
@@ -770,7 +740,7 @@ const AdminDashboard = () => {
                     </div>
                   ) : (
                     activeContacts.map((contact) => (
-                      <div key={contact.id}>
+                      <div key={contact.id || 'unknown'}>
                         {/* Mobile Card - Compact */}
                         <div 
                           onClick={() => setSelectedContact(contact)}
@@ -815,7 +785,9 @@ const AdminDashboard = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleRecoverContact(contact.id)
+                                  if (contact.id) {
+                                    handleRecoverContact(contact.id)
+                                  }
                                 }}
                                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
                                 title="Obnovit záznam"
@@ -831,7 +803,9 @@ const AdminDashboard = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleToggleContactResolved(contact.id, !!contact.is_resolved)
+                                  if (contact.id) {
+                                    handleToggleContactResolved(contact.id, !!contact.is_resolved)
+                                  }
                                 }}
                                 className={`p-2 rounded-full transition-colors ${
                                   contact.is_resolved 
@@ -848,7 +822,9 @@ const AdminDashboard = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleContactDelete(contact.id)
+                                  if (contact.id) {
+                                    handleContactDelete(contact.id)
+                                  }
                                 }}
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                                 title="Smazat záznam"
@@ -914,9 +890,9 @@ const AdminDashboard = () => {
               </h3>
               <div className="flex items-center gap-2">
                 {/* Favorite Button - Mobile Modal */}
-                {!selectedClient.is_deleted && (
+                {!selectedClient.is_deleted && selectedClient.id && (
                   <button
-                    onClick={() => handleToggleFavorite(selectedClient.id, !!selectedClient.is_favorite)}
+                    onClick={() => handleToggleFavorite(selectedClient.id!, !!selectedClient.is_favorite)}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                     title={selectedClient.is_favorite ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
                   >
@@ -1046,20 +1022,20 @@ const AdminDashboard = () => {
                 )}
               </div>
 
-              {/* Delete Button - Mobile */}
-              {!selectedClient.is_deleted && (
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleDelete(selectedClient.id)}
-                    className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Smazat záznam
-                  </button>
-                </div>
-              )}
+               {/* Delete Button - Mobile */}
+               {!selectedClient.is_deleted && selectedClient.id && (
+                 <div className="pt-4 border-t border-gray-200">
+                   <button
+                     onClick={() => handleDelete(selectedClient.id!)}
+                     className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                   >
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                     </svg>
+                     Smazat záznam
+                   </button>
+                 </div>
+               )}
             </div>
           </div>
         </div>
@@ -1082,9 +1058,9 @@ const AdminDashboard = () => {
               </h3>
               <div className="flex items-center gap-2">
                 {/* Resolved Button - Mobile Modal */}
-                {!selectedContact.is_deleted && (
+                {!selectedContact.is_deleted && selectedContact.id && (
                   <button
-                    onClick={() => handleToggleContactResolved(selectedContact.id, !!selectedContact.is_resolved)}
+                    onClick={() => handleToggleContactResolved(selectedContact.id!, !!selectedContact.is_resolved)}
                     className={`p-2 rounded-full transition-colors ${
                       selectedContact.is_resolved 
                         ? 'text-green-600 bg-green-50 hover:bg-green-100' 
@@ -1162,32 +1138,32 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* Action Buttons - Mobile */}
-              {selectedContact.is_deleted ? (
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleRecoverContact(selectedContact.id)}
-                    className="w-full px-4 py-3 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Obnovit záznam
-                  </button>
-                </div>
-              ) : (
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleContactDelete(selectedContact.id)}
-                    className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Smazat záznam
-                  </button>
-                </div>
-              )}
+               {/* Action Buttons - Mobile */}
+               {selectedContact.id && (selectedContact.is_deleted ? (
+                 <div className="pt-4 border-t border-gray-200">
+                   <button
+                     onClick={() => handleRecoverContact(selectedContact.id!)}
+                     className="w-full px-4 py-3 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                   >
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                     </svg>
+                     Obnovit záznam
+                   </button>
+                 </div>
+               ) : (
+                 <div className="pt-4 border-t border-gray-200">
+                   <button
+                     onClick={() => handleContactDelete(selectedContact.id!)}
+                     className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                   >
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                     </svg>
+                     Smazat záznam
+                   </button>
+                 </div>
+               ))}
             </div>
           </div>
         </div>
