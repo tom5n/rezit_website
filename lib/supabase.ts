@@ -29,4 +29,6 @@ export interface CalculatorSubmission {
   message?: string
   ip_address?: string
   user_agent?: string
+  is_deleted?: boolean
+  is_favorite?: boolean
 }

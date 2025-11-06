@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { getCalculatorData, categorizeClients, getContactData } from '../lib/calculator-db'
+import { getCalculatorData, categorizeClients, getContactData, markAsDeleted, toggleFavorite, markContactAsDeleted, toggleContactResolved, recoverContact } from '../lib/calculator-db'
 
 interface CalculatorSubmission {
   id: string
@@ -19,6 +19,8 @@ interface CalculatorSubmission {
   show_savings: boolean
   show_five_year_savings: boolean
   message?: string
+  is_deleted?: boolean
+  is_favorite?: boolean
 }
 
 interface ContactSubmission {
@@ -31,6 +33,8 @@ interface ContactSubmission {
   message: string
   ip_address?: string
   user_agent?: string
+  is_deleted?: boolean
+  is_resolved?: boolean
 }
 
 const AdminDashboard = () => {
@@ -38,7 +42,8 @@ const AdminDashboard = () => {
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'all' | 'high' | 'medium' | 'low'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'high' | 'medium' | 'low' | 'deleted' | 'favorite'>('all')
+  const [activeContactTab, setActiveContactTab] = useState<'all' | 'resolved' | 'deleted'>('all')
   const [activeSection, setActiveSection] = useState<'calculator' | 'contact'>('calculator')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<CalculatorSubmission | null>(null)
@@ -133,25 +138,162 @@ const AdminDashboard = () => {
     )
   }
 
-  const categorizedClients = categorizeClients(submissions)
+  // Všechny nesmazané záznamy (pro zobrazení počtu ve filtru "Vše")
+  const allActiveSubmissions = submissions.filter(sub => !sub.is_deleted)
+  
+  // Kategorizace ze všech nesmazaných záznamů (pro zobrazení počtů v tagech)
+  const allCategorizedClients = categorizeClients(allActiveSubmissions)
+  
+  // Všechny oblíbené nesmazané záznamy (pro zobrazení počtu ve filtru "Oblíbené")
+  const allFavoriteSubmissions = submissions.filter(sub => !sub.is_deleted && sub.is_favorite)
+  
+  // Všechny smazané záznamy (pro zobrazení počtu ve filtru "Smazané")
+  const allDeletedSubmissions = submissions.filter(sub => sub.is_deleted)
+
+  // Filtrování smazaných záznamů (pokud není vybrán filtr "deleted")
+  const activeSubmissions = activeTab === 'deleted' 
+    ? submissions.filter(sub => sub.is_deleted)
+    : activeTab === 'favorite'
+    ? submissions.filter(sub => !sub.is_deleted && sub.is_favorite)
+    : submissions.filter(sub => !sub.is_deleted)
+
+  const categorizedClients = categorizeClients(activeSubmissions)
   
   // Funkce pro získání dat podle aktivního filtru
   const getFilteredClients = () => {
     switch (activeTab) {
       case 'all':
-        return submissions
+        return activeSubmissions
       case 'high':
         return categorizedClients.high
       case 'medium':
         return categorizedClients.medium
       case 'low':
         return categorizedClients.low
+      case 'deleted':
+        return activeSubmissions
+      case 'favorite':
+        return activeSubmissions
       default:
-        return submissions
+        return activeSubmissions
     }
   }
   
   const filteredClients = getFilteredClients()
+
+  // Funkce pro označení jako smazané
+  const handleDelete = async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tento záznam?')) {
+      return
+    }
+
+    const result = await markAsDeleted(id)
+    
+    if (result.success) {
+      // Aktualizovat lokální stav
+      setSubmissions(prev => prev.map(sub => 
+        sub.id === id ? { ...sub, is_deleted: true } : sub
+      ))
+      // Pokud je vybraný klient, zavřít modal
+      if (selectedClient?.id === id) {
+        setSelectedClient(null)
+      }
+    } else {
+      alert('Chyba při mazání záznamu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro přepnutí oblíbeného
+  const handleToggleFavorite = async (id: string, currentFavorite: boolean) => {
+    const result = await toggleFavorite(id, !currentFavorite)
+    
+    if (result.success) {
+      // Aktualizovat lokální stav
+      setSubmissions(prev => prev.map(sub => 
+        sub.id === id ? { ...sub, is_favorite: !currentFavorite } : sub
+      ))
+      // Aktualizovat vybraný klient v modalu
+      if (selectedClient?.id === id) {
+        setSelectedClient(prev => prev ? { ...prev, is_favorite: !currentFavorite } : null)
+      }
+    } else {
+      alert('Chyba při změně oblíbeného: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Filtrování kontaktních záznamů
+  const activeContacts = activeContactTab === 'deleted'
+    ? contactSubmissions.filter(contact => contact.is_deleted)
+    : activeContactTab === 'resolved'
+    ? contactSubmissions.filter(contact => !contact.is_deleted && contact.is_resolved)
+    : contactSubmissions.filter(contact => !contact.is_deleted)
+
+  // Všechny nesmazané kontakty (pro zobrazení počtu ve filtru "Vše")
+  const allActiveContacts = contactSubmissions.filter(contact => !contact.is_deleted)
+  
+  // Všechny vyřešené nesmazané kontakty (pro zobrazení počtu ve filtru "Vyřešené")
+  const allResolvedContacts = contactSubmissions.filter(contact => !contact.is_deleted && contact.is_resolved)
+  
+  // Všechny smazané kontakty (pro zobrazení počtu ve filtru "Smazané")
+  const allDeletedContacts = contactSubmissions.filter(contact => contact.is_deleted)
+
+  // Funkce pro označení kontaktu jako smazaného
+  const handleContactDelete = async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tento kontakt?')) {
+      return
+    }
+
+    const result = await markContactAsDeleted(id)
+    
+    if (result.success) {
+      // Aktualizovat lokální stav
+      setContactSubmissions(prev => prev.map(contact => 
+        contact.id === id ? { ...contact, is_deleted: true } : contact
+      ))
+      // Pokud je vybraný kontakt, zavřít modal
+      if (selectedContact?.id === id) {
+        setSelectedContact(null)
+      }
+    } else {
+      alert('Chyba při mazání kontaktu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro přepnutí stavu vyřešení kontaktu
+  const handleToggleContactResolved = async (id: string, currentResolved: boolean) => {
+    const result = await toggleContactResolved(id, !currentResolved)
+    
+    if (result.success) {
+      // Aktualizovat lokální stav
+      setContactSubmissions(prev => prev.map(contact => 
+        contact.id === id ? { ...contact, is_resolved: !currentResolved } : contact
+      ))
+      // Aktualizovat vybraný kontakt v modalu
+      if (selectedContact?.id === id) {
+        setSelectedContact(prev => prev ? { ...prev, is_resolved: !currentResolved } : null)
+      }
+    } else {
+      alert('Chyba při změně stavu vyřešení: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro obnovení smazaného kontaktu
+  const handleRecoverContact = async (id: string) => {
+    const result = await recoverContact(id)
+    
+    if (result.success) {
+      // Aktualizovat lokální stav
+      setContactSubmissions(prev => prev.map(contact => 
+        contact.id === id ? { ...contact, is_deleted: false } : contact
+      ))
+      // Pokud je vybraný kontakt, zavřít modal
+      if (selectedContact?.id === id) {
+        setSelectedContact(null)
+      }
+    } else {
+      alert('Chyba při obnovování kontaktu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -312,19 +454,23 @@ const AdminDashboard = () => {
         <div className="p-4 md:p-8">
           {activeSection === 'calculator' && (
             <div className="mb-6">
-              <div className="flex flex-row justify-between items-start mb-4 gap-4">
+              <div className="flex flex-row justify-between items-center md:items-start mb-4 gap-4">
                 <div className="flex-1">
                   <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">Kalkulačka úspor</h2>
                   <p className="text-base md:text-lg text-gray-600 font-sans">
                     {filteredClients.length} {activeTab === 'all' 
                       ? getPluralForm(filteredClients.length, 'klient celkem', 'klienti celkem', 'klientů celkem')
+                      : activeTab === 'deleted'
+                      ? getPluralForm(filteredClients.length, 'smazaný záznam', 'smazané záznamy', 'smazaných záznamů')
+                      : activeTab === 'favorite'
+                      ? getPluralForm(filteredClients.length, 'oblíbený záznam', 'oblíbené záznamy', 'oblíbených záznamů')
                       : `klientů v kategorii "${activeTab === 'high' ? 'Vysoký' : activeTab === 'medium' ? 'Střední' : 'Nízký'} potenciál"`
                     }
                   </p>
                 </div>
                 <button
                   onClick={loadData}
-                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0"
+                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
                   title="Obnovit data"
                 >
                   <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,46 +483,68 @@ const AdminDashboard = () => {
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-8 px-8 md:mx-0 md:px-0 md:overflow-x-visible">
                 <button
                   onClick={() => setActiveTab('all')}
-                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
                     activeTab === 'all' 
-                      ? 'bg-gray-600 text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
                   }`}
                 >
-                  📊 Vše ({submissions.length})
+                  📊 Vše ({allActiveSubmissions.length})
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('favorite')}
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                    activeTab === 'favorite' 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                  }`}
+                >
+                  ⭐ Oblíbené ({allFavoriteSubmissions.length})
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('high')}
-                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
                     activeTab === 'high' 
-                      ? 'bg-primary-500 text-white' 
-                      : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
                   }`}
                 >
-                  🟢 Vysoký potenciál ({categorizedClients.high.length})
+                  🟢 Vysoký potenciál ({allCategorizedClients.high.length})
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('medium')}
-                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
                     activeTab === 'medium' 
-                      ? 'bg-primary-400 text-white' 
-                      : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
                   }`}
                 >
-                  🟡 Střední potenciál ({categorizedClients.medium.length})
+                  🟡 Střední potenciál ({allCategorizedClients.medium.length})
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('low')}
-                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
                     activeTab === 'low' 
-                      ? 'bg-gray-500 text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
                   }`}
                 >
-                  ⚪ Nízký potenciál ({categorizedClients.low.length})
+                  ⚪ Nízký potenciál ({allCategorizedClients.low.length})
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('deleted')}
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                    activeTab === 'deleted' 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                  }`}
+                >
+                  🗑️ Smazané ({allDeletedSubmissions.length})
                 </button>
               </div>
 
@@ -440,7 +608,7 @@ const AdminDashboard = () => {
                           </div>
 
                           {/* Desktop Card - Full */}
-                          <div key={client.id} className="hidden md:block bg-white rounded-lg shadow p-6">
+                          <div key={client.id} className="hidden md:block bg-white rounded-lg shadow p-6 relative">
                             <div className="flex justify-between items-start mb-6">
                               <div>
                                 <h3 className="text-xl font-heading font-semibold text-gray-800">
@@ -480,6 +648,43 @@ const AdminDashboard = () => {
                                 <p className="text-lg font-heading font-semibold text-gray-800">{formatCurrency(client.monthly_fee)}</p>
                               </div>
                             </div>
+
+                            {/* Action Buttons - Desktop */}
+                            {!client.is_deleted && (
+                              <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                                {/* Favorite Button - Desktop */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleToggleFavorite(client.id, !!client.is_favorite)
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+                                  title={client.is_favorite ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
+                                >
+                                  <svg 
+                                    className={`w-5 h-5 transition-colors ${client.is_favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} 
+                                    fill={client.is_favorite ? 'currentColor' : 'none'} 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                  </svg>
+                                </button>
+                                {/* Delete Button - Desktop */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDelete(client.id)
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                  title="Smazat záznam"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )
@@ -492,21 +697,62 @@ const AdminDashboard = () => {
 
           {activeSection === 'contact' && (
             <div className="mb-6">
-              <div className="flex flex-row justify-between items-start mb-4 gap-4">
+              <div className="flex flex-row justify-between items-center md:items-start mb-4 gap-4">
                 <div className="flex-1">
                   <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">Kontaktní formulář</h2>
                   <p className="text-base md:text-lg text-gray-600 font-sans">
-                    {contactSubmissions.length} {getPluralForm(contactSubmissions.length, 'přijatá zpráva', 'přijaté zprávy', 'přijatých zpráv')}
+                    {activeContacts.length} {activeContactTab === 'all' 
+                      ? getPluralForm(activeContacts.length, 'přijatá zpráva', 'přijaté zprávy', 'přijatých zpráv')
+                      : activeContactTab === 'resolved'
+                      ? getPluralForm(activeContacts.length, 'vyřešená zpráva', 'vyřešené zprávy', 'vyřešených zpráv')
+                      : getPluralForm(activeContacts.length, 'smazaná zpráva', 'smazané zprávy', 'smazaných zpráv')
+                    }
                   </p>
                 </div>
                 <button
                   onClick={loadData}
-                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0"
+                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
                   title="Obnovit data"
                 >
                   <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
+                </button>
+              </div>
+
+              {/* Filtry kontaktů */}
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-8 px-8 md:mx-0 md:px-0 md:overflow-x-visible mb-6">
+                <button
+                  onClick={() => setActiveContactTab('all')}
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                    activeContactTab === 'all' 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                  }`}
+                >
+                  📊 Vše ({allActiveContacts.length})
+                </button>
+                
+                <button
+                  onClick={() => setActiveContactTab('resolved')}
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                    activeContactTab === 'resolved' 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                  }`}
+                >
+                  ✅ Vyřešené ({allResolvedContacts.length})
+                </button>
+                
+                <button
+                  onClick={() => setActiveContactTab('deleted')}
+                  className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                    activeContactTab === 'deleted' 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                  }`}
+                >
+                  🗑️ Smazané ({allDeletedContacts.length})
                 </button>
               </div>
 
@@ -516,12 +762,12 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4 mt-6">
-                  {contactSubmissions.length === 0 ? (
+                  {activeContacts.length === 0 ? (
                     <div className="text-center py-12">
                       <p className="text-gray-500">Žádné kontaktní zprávy</p>
                     </div>
                   ) : (
-                    contactSubmissions.map((contact) => (
+                    activeContacts.map((contact) => (
                       <div key={contact.id}>
                         {/* Mobile Card - Compact */}
                         <div 
@@ -537,10 +783,17 @@ const AdminDashboard = () => {
                                 {contact.email}
                               </p>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-xs font-sans font-semibold ${
-                              contact.business_type ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600'
-                            }`}>
-                              {contact.business_type || 'Neznámý typ'}
+                            <div className="flex gap-2">
+                              {contact.is_resolved && (
+                                <div className="px-3 py-1 rounded-full text-xs font-sans font-semibold bg-green-100 text-green-700">
+                                  ✅ Vyřešené
+                                </div>
+                              )}
+                              <div className={`px-3 py-1 rounded-full text-xs font-sans font-semibold ${
+                                contact.business_type ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {contact.business_type || 'Neznámý typ'}
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center justify-between text-sm text-gray-500">
@@ -552,7 +805,58 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Desktop Card - Full */}
-                        <div className="hidden md:block bg-white rounded-lg shadow p-6">
+                        <div className="hidden md:block bg-white rounded-lg shadow p-6 relative">
+                          {/* Action Buttons - Desktop */}
+                          {contact.is_deleted ? (
+                            <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                              {/* Recover Button - Desktop */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleRecoverContact(contact.id)
+                                }}
+                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                                title="Obnovit záznam"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                              {/* Resolved Button - Desktop */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleContactResolved(contact.id, !!contact.is_resolved)
+                                }}
+                                className={`p-2 rounded-full transition-colors ${
+                                  contact.is_resolved 
+                                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                                    : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                }`}
+                                title={contact.is_resolved ? 'Označit jako nevyřešené' : 'Označit jako vyřešené'}
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </button>
+                              {/* Delete Button - Desktop */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleContactDelete(contact.id)
+                                }}
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Smazat záznam"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
                           <div className="flex justify-between items-start mb-6">
                             <div>
                               <h3 className="text-xl font-heading font-semibold text-gray-800">
@@ -562,7 +866,12 @@ const AdminDashboard = () => {
                                 {contact.subject || 'Bez předmětu'} • {contact.created_at ? formatDate(contact.created_at) : 'Neznámé datum'}
                               </p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex gap-2">
+                              {contact.is_resolved && (
+                                <div className="px-4 py-2 rounded-full text-sm font-sans font-semibold bg-green-100 text-green-700">
+                                  ✅ Vyřešené
+                                </div>
+                              )}
                               <div className={`px-4 py-2 rounded-full text-sm font-sans font-semibold ${
                                 contact.business_type ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600'
                               }`}>
@@ -601,14 +910,33 @@ const AdminDashboard = () => {
               <h3 className="text-xl font-heading font-bold text-gray-800">
                 {selectedClient.business_name || 'Neznámý podnik'}
               </h3>
-              <button
-                onClick={() => setSelectedClient(null)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Favorite Button - Mobile Modal */}
+                {!selectedClient.is_deleted && (
+                  <button
+                    onClick={() => handleToggleFavorite(selectedClient.id, !!selectedClient.is_favorite)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    title={selectedClient.is_favorite ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
+                  >
+                    <svg 
+                      className={`w-6 h-6 transition-colors ${selectedClient.is_favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} 
+                      fill={selectedClient.is_favorite ? 'currentColor' : 'none'} 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedClient(null)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}
@@ -715,6 +1043,21 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </div>
+
+              {/* Delete Button - Mobile */}
+              {!selectedClient.is_deleted && (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleDelete(selectedClient.id)}
+                    className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Smazat záznam
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -735,14 +1078,32 @@ const AdminDashboard = () => {
               <h3 className="text-xl font-heading font-bold text-gray-800">
                 {selectedContact.name}
               </h3>
-              <button
-                onClick={() => setSelectedContact(null)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Resolved Button - Mobile Modal */}
+                {!selectedContact.is_deleted && (
+                  <button
+                    onClick={() => handleToggleContactResolved(selectedContact.id, !!selectedContact.is_resolved)}
+                    className={`p-2 rounded-full transition-colors ${
+                      selectedContact.is_resolved 
+                        ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                        : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                    }`}
+                    title={selectedContact.is_resolved ? 'Označit jako nevyřešené' : 'Označit jako vyřešené'}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedContact(null)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}
@@ -796,6 +1157,33 @@ const AdminDashboard = () => {
                       <p className="text-sm font-sans text-gray-600 break-all">{selectedContact.user_agent}</p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Action Buttons - Mobile */}
+              {selectedContact.is_deleted ? (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleRecoverContact(selectedContact.id)}
+                    className="w-full px-4 py-3 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Obnovit záznam
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleContactDelete(selectedContact.id)}
+                    className="w-full px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2 font-sans font-semibold"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Smazat záznam
+                  </button>
                 </div>
               )}
             </div>

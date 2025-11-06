@@ -39,6 +39,8 @@ export interface ContactSubmission {
   message: string
   ip_address?: string
   user_agent?: string
+  is_deleted?: boolean
+  is_resolved?: boolean
 }
 
 export async function saveCalculatorData(data: CalculatorData): Promise<{ success: boolean; error?: string }> {
@@ -95,6 +97,46 @@ export async function getCalculatorData() {
   } catch (error) {
     console.error('Neočekávaná chyba při načítání dat:', error)
     return { success: false, error: 'Neočekávaná chyba při načítání dat', data: [] }
+  }
+}
+
+// Funkce pro označení záznamu jako smazaného
+export async function markAsDeleted(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('calculator_submissions')
+      .update({ is_deleted: true })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Chyba při označování jako smazané:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Neočekávaná chyba při označování jako smazané:', error)
+    return { success: false, error: 'Neočekávaná chyba při označování jako smazané' }
+  }
+}
+
+// Funkce pro přepnutí oblíbeného záznamu
+export async function toggleFavorite(id: string, isFavorite: boolean): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('calculator_submissions')
+      .update({ is_favorite: isFavorite })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Chyba při změně oblíbeného:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Neočekávaná chyba při změně oblíbeného:', error)
+    return { success: false, error: 'Neočekávaná chyba při změně oblíbeného' }
   }
 }
 
@@ -165,5 +207,65 @@ export async function getContactData() {
   } catch (error) {
     console.error('Neočekávaná chyba při načítání kontaktních dat:', error)
     return { success: false, error: 'Neočekávaná chyba při načítání dat', data: [] }
+  }
+}
+
+// Funkce pro označení kontaktního záznamu jako smazaného
+export async function markContactAsDeleted(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('contact_submissions')
+      .update({ is_deleted: true })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Chyba při označování kontaktu jako smazaného:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Neočekávaná chyba při označování kontaktu jako smazaného:', error)
+    return { success: false, error: 'Neočekávaná chyba při označování jako smazaného' }
+  }
+}
+
+// Funkce pro obnovení smazaného kontaktního záznamu
+export async function recoverContact(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('contact_submissions')
+      .update({ is_deleted: false })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Chyba při obnovování kontaktu:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Neočekávaná chyba při obnovování kontaktu:', error)
+    return { success: false, error: 'Neočekávaná chyba při obnovování' }
+  }
+}
+
+// Funkce pro přepnutí stavu vyřešení kontaktu
+export async function toggleContactResolved(id: string, isResolved: boolean): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('contact_submissions')
+      .update({ is_resolved: isResolved })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Chyba při změně stavu vyřešení:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Neočekávaná chyba při změně stavu vyřešení:', error)
+    return { success: false, error: 'Neočekávaná chyba při změně stavu vyřešení' }
   }
 }
