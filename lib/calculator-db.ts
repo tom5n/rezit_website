@@ -269,3 +269,4 @@ export async function toggleContactResolved(id: string, isResolved: boolean): Pr
     return { success: false, error: 'Neočekávaná chyba při změně stavu vyřešení' }
   }
 }
+
