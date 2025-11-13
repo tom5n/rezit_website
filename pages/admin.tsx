@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [projectPasswordCounts, setProjectPasswordCounts] = useState<{ [key: string]: number }>({})
   const [projectTodoCounts, setProjectTodoCounts] = useState<{ [key: string]: number }>({})
   const [selectedProjectDetail, setSelectedProjectDetail] = useState<Project | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projectPasswords, setProjectPasswords] = useState<PasswordEntry[]>([])
   const [projectTodos, setProjectTodos] = useState<Todo[]>([])
   const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords'>('todos')
@@ -462,16 +463,20 @@ const AdminDashboard = () => {
   // Funkce pro otevření modalu pro přidání/editaci projektu
   const openProjectModal = (project?: Project) => {
     if (project) {
+      setSelectedProject(project)
       setProjectFormData({
         name: project.name,
         display_name: project.display_name,
-        description: project.description || ''
+        description: project.description || '',
+        status: project.status || 'active'
       })
     } else {
+      setSelectedProject(null)
       setProjectFormData({
         name: '',
         display_name: '',
-        description: ''
+        description: '',
+        status: 'active'
       })
     }
     setIsProjectModalOpen(true)
@@ -480,6 +485,7 @@ const AdminDashboard = () => {
   // Funkce pro zavření modalu projektu
   const closeProjectModal = () => {
     setIsProjectModalOpen(false)
+    setSelectedProject(null)
     setProjectFormData({
       name: '',
       display_name: '',
@@ -495,8 +501,14 @@ const AdminDashboard = () => {
       return
     }
 
-    // TODO: Implementovat updateProject pokud bude potřeba
-    const result = await createProject(projectFormData)
+    let result
+    if (selectedProject?.id) {
+      // Editace existujícího projektu
+      result = await updateProject(selectedProject.id, projectFormData)
+    } else {
+      // Vytvoření nového projektu
+      result = await createProject(projectFormData)
+    }
 
     if (result.success) {
       closeProjectModal()
@@ -1502,6 +1514,20 @@ const AdminDashboard = () => {
                               
                               {/* Action Buttons vpravo */}
                               <div className="flex items-center gap-2">
+                                {/* Edit Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openProjectModal(project)
+                                  }}
+                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
+                                  title="Upravit projekt"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                
                                 {/* Toggle Status Button */}
                                 <button
                                   onClick={async (e) => {
@@ -2520,7 +2546,7 @@ const AdminDashboard = () => {
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h3 className="text-xl font-heading font-bold text-gray-800">
-                Přidat nový projekt
+                {selectedProject ? 'Upravit projekt' : 'Přidat nový projekt'}
               </h3>
               <button
                 onClick={closeProjectModal}
@@ -2609,7 +2635,7 @@ const AdminDashboard = () => {
                   onClick={handleSaveProject}
                   className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
                 >
-                  Přidat projekt
+                  {selectedProject ? 'Uložit změny' : 'Přidat projekt'}
                 </button>
               </div>
             </div>
