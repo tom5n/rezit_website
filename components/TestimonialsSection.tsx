@@ -27,7 +27,7 @@ const TestimonialsSection = () => {
       id: 2,
       name: "Suzi Pu",
       business: "Black Rose Barber",
-      quote: "Obsáhlej systém, který pokrývá všechno co potřebujeme. Klienti si mohou rezervovat termíny kdykoliv a my máme přehled o celém provozu.",
+      quote: "",
       avatar: "/images/testimonials/suzipu.jpg",
       logo: "/images/clients/blackrosebarber.png"
     },
