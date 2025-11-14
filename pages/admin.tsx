@@ -539,7 +539,14 @@ const AdminDashboard = () => {
 
   // Filtrování projektů podle statusu
   const filteredProjects = activeProjectFilter === 'all'
-    ? projects
+    ? [...projects].sort((a, b) => {
+        // V sekci "Vše" - nejdřív čekající (active), pak dokončené (completed)
+        const aStatus = a.status || 'active'
+        const bStatus = b.status || 'active'
+        if (aStatus === 'active' && bStatus === 'completed') return -1
+        if (aStatus === 'completed' && bStatus === 'active') return 1
+        return 0
+      })
     : activeProjectFilter === 'active'
     ? projects.filter(p => p.status === 'active' || !p.status)
     : projects.filter(p => p.status === 'completed')
@@ -1336,7 +1343,7 @@ const AdminDashboard = () => {
                     {filteredProjects.length} {activeProjectFilter === 'all' 
                       ? getPluralForm(filteredProjects.length, 'projekt', 'projekty', 'projektů')
                       : activeProjectFilter === 'active'
-                      ? getPluralForm(filteredProjects.length, 'čekající projekt', 'čekající projekty', 'čekajících projektů')
+                      ? getPluralForm(filteredProjects.length, 'probíhající projekt', 'probíhající projekty', 'probíhajících projektů')
                       : getPluralForm(filteredProjects.length, 'dokončený projekt', 'dokončené projekty', 'dokončených projektů')
                     }
                   </p>
@@ -1385,7 +1392,7 @@ const AdminDashboard = () => {
                         : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
                     }`}
                   >
-                    ⏳ Čekající ({projects.filter(p => p.status === 'active' || !p.status).length})
+                    ⏳ Probíhající ({projects.filter(p => p.status === 'active' || !p.status).length})
                   </button>
                   
                   <button
@@ -1425,9 +1432,20 @@ const AdminDashboard = () => {
                           >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
-                                <h3 className="text-lg font-heading font-semibold text-gray-800 mb-1">
-                                  {project.display_name}
-                                </h3>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-lg font-heading font-semibold text-gray-800">
+                                    {project.display_name}
+                                  </h3>
+                                  {project.status === 'completed' ? (
+                                    <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
+                                      ✓ Dokončeno
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
+                                      ⏳ Probíhající
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-sm text-gray-600 font-sans">
                                   {project.name}
                                 </p>
@@ -1468,9 +1486,13 @@ const AdminDashboard = () => {
                                   <h3 className="text-lg font-heading font-semibold text-gray-800">
                                     {project.display_name}
                                   </h3>
-                                  {project.status === 'completed' && (
+                                  {project.status === 'completed' ? (
                                     <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
                                       ✓ Dokončeno
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
+                                      ⏳ Probíhající
                                     </span>
                                   )}
                                 </div>
@@ -2004,12 +2026,18 @@ const AdminDashboard = () => {
                 <div>
                   {(() => {
                     // Filtrování todos podle search query
-                    const filteredTodos = todoSearchQuery
+                    const filteredTodos = (todoSearchQuery
                       ? projectTodos.filter(t => 
                           t.title.toLowerCase().includes(todoSearchQuery.toLowerCase()) ||
                           t.description?.toLowerCase().includes(todoSearchQuery.toLowerCase())
                         )
                       : projectTodos
+                    ).sort((a, b) => {
+                      // Nejdřív nehotové úkoly, pak hotové
+                      if (a.is_completed && !b.is_completed) return 1
+                      if (!a.is_completed && b.is_completed) return -1
+                      return 0
+                    })
 
                     if (filteredTodos.length === 0) {
                       return (
@@ -2618,7 +2646,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setProjectFormData({ ...projectFormData, status: e.target.value as 'active' | 'completed' })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
                 >
-                  <option value="active">⏳ Čekající / Aktivní</option>
+                  <option value="active">⏳ Probíhající</option>
                   <option value="completed">✅ Dokončené</option>
                 </select>
               </div>
