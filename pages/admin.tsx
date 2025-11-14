@@ -4,6 +4,7 @@ import { getCalculatorData, categorizeClients, getContactData, markAsDeleted, to
 import { getPasswordsByProjectId, createPassword, updatePassword, deletePassword, PasswordEntry, PasswordFormData, countPasswordsByProjectId } from '../lib/passwords-db'
 import { getProjects, createProject, updateProject, deleteProject, Project, ProjectFormData } from '../lib/projects-db'
 import { getTodosByProjectId, createTodo, updateTodo, deleteTodo, countTodosByProjectId, Todo, TodoFormData } from '../lib/todos-db'
+import { getNotesByProjectId, createNote, updateNote, deleteNote, Note, NoteFormData } from '../lib/notes-db'
 import { CalculatorSubmission } from '../lib/supabase'
 
 // Admin dashboard component
@@ -24,7 +25,8 @@ const AdminDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projectPasswords, setProjectPasswords] = useState<PasswordEntry[]>([])
   const [projectTodos, setProjectTodos] = useState<Todo[]>([])
-  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords'>('todos')
+  const [projectNotes, setProjectNotes] = useState<Note[]>([])
+  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes'>('todos')
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false)
   const [todoFormData, setTodoFormData] = useState<TodoFormData>({
@@ -36,13 +38,16 @@ const AdminDashboard = () => {
   const [selectedClient, setSelectedClient] = useState<CalculatorSubmission | null>(null)
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null)
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null)
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
   const [isPasswordVisible, setIsPasswordVisible] = useState<{ [key: string]: boolean }>({})
   const [expandedPasswords, setExpandedPasswords] = useState<{ [key: string]: boolean }>({})
   const [copyToast, setCopyToast] = useState(false)
   const [passwordSearchQuery, setPasswordSearchQuery] = useState('')
   const [todoSearchQuery, setTodoSearchQuery] = useState('')
+  const [noteSearchQuery, setNoteSearchQuery] = useState('')
   const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
     project_id: '',
     service_name: '',
@@ -50,6 +55,10 @@ const AdminDashboard = () => {
     password: '',
     notes: '',
     url: ''
+  })
+  const [noteFormData, setNoteFormData] = useState<NoteFormData>({
+    project_id: '',
+    content: ''
   })
   const [projectFormData, setProjectFormData] = useState<ProjectFormData>({
     name: '',
@@ -567,12 +576,21 @@ const AdminDashboard = () => {
     }
   }
 
+  // Funkce pro načtení poznámek projektu
+  const loadProjectNotes = async (projectId: string) => {
+    const result = await getNotesByProjectId(projectId)
+    if (result.success) {
+      setProjectNotes(result.data)
+    }
+  }
+
   // Funkce pro otevření detailu projektu
   const openProjectDetail = async (project: Project) => {
     setSelectedProjectDetail(project)
     if (project.id) {
       await loadProjectPasswords(project.id)
       await loadProjectTodos(project.id)
+      await loadProjectNotes(project.id)
     }
   }
 
@@ -581,6 +599,81 @@ const AdminDashboard = () => {
     setSelectedProjectDetail(null)
     setProjectPasswords([])
     setProjectTodos([])
+    setProjectNotes([])
+  }
+
+  // ==================== FUNKCE PRO SPRÁVU POZNÁMEK ====================
+
+  // Funkce pro otevření modalu pro přidání/editaci poznámky
+  const openNoteModal = (note?: Note) => {
+    if (note) {
+      setSelectedNote(note)
+      setNoteFormData({
+        project_id: note.project_id,
+        content: note.content
+      })
+    } else {
+      setSelectedNote(null)
+      setNoteFormData({
+        project_id: selectedProjectDetail?.id || '',
+        content: ''
+      })
+    }
+    setIsNoteModalOpen(true)
+  }
+
+  // Funkce pro zavření modalu poznámky
+  const closeNoteModal = () => {
+    setIsNoteModalOpen(false)
+    setSelectedNote(null)
+    setNoteFormData({
+      project_id: '',
+      content: ''
+    })
+  }
+
+  // Funkce pro uložení poznámky (vytvoření nebo aktualizace)
+  const handleSaveNote = async () => {
+    if (!noteFormData.project_id || !noteFormData.content.trim()) {
+      alert('Prosím vyplňte obsah poznámky')
+      return
+    }
+
+    let result
+    if (selectedNote?.id) {
+      // Editace existující poznámky
+      result = await updateNote(selectedNote.id, noteFormData)
+    } else {
+      // Vytvoření nové poznámky
+      result = await createNote(noteFormData)
+    }
+
+    if (result.success) {
+      closeNoteModal()
+      if (selectedProjectDetail?.id) {
+        await loadProjectNotes(selectedProjectDetail.id)
+      }
+    } else {
+      alert('Chyba při ukládání poznámky: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro smazání poznámky
+  const handleDeleteNote = async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tuto poznámku?')) {
+      return
+    }
+
+    const result = await deleteNote(id)
+    
+    if (result.success) {
+      setProjectNotes(prev => prev.filter(n => n.id !== id))
+      if (selectedNote?.id === id) {
+        setSelectedNote(null)
+      }
+    } else {
+      alert('Chyba při mazání poznámky: ' + (result.error || 'Neznámá chyba'))
+    }
   }
 
   // ==================== FUNKCE PRO SPRÁVU TODOS ====================
@@ -1628,6 +1721,7 @@ const AdminDashboard = () => {
                       if (selectedProjectDetail.id) {
                         loadProjectPasswords(selectedProjectDetail.id)
                         loadProjectTodos(selectedProjectDetail.id)
+                        loadProjectNotes(selectedProjectDetail.id)
                       }
                     }}
                     className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
@@ -1653,6 +1747,17 @@ const AdminDashboard = () => {
                       onClick={() => openTodoModal()}
                       className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0"
                       title="Přidat úkol"
+                    >
+                      <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  )}
+                  {activeProjectTab === 'notes' && (
+                    <button
+                      onClick={() => openNoteModal()}
+                      className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0"
+                      title="Přidat poznámku"
                     >
                       <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1685,20 +1790,32 @@ const AdminDashboard = () => {
                   >
                     🔐 Hesla ({projectPasswords.length})
                   </button>
+                  <button
+                    onClick={() => setActiveProjectTab('notes')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      activeProjectTab === 'notes' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    📝 Poznámky ({projectNotes.length})
+                  </button>
                   
                   {/* Searchbar */}
                   <div className="relative ml-auto flex-shrink-0">
                     <input
                       type="text"
-                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : todoSearchQuery}
+                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : todoSearchQuery}
                       onChange={(e) => {
                         if (activeProjectTab === 'passwords') {
                           setPasswordSearchQuery(e.target.value)
+                        } else if (activeProjectTab === 'notes') {
+                          setNoteSearchQuery(e.target.value)
                         } else {
                           setTodoSearchQuery(e.target.value)
                         }
                       }}
-                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : 'Vyhledat úkol...'}
+                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : activeProjectTab === 'notes' ? 'Vyhledat poznámku...' : 'Vyhledat úkol...'}
                       className="px-4 py-3 pl-11 pr-10 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans text-sm w-64"
                     />
                     <svg 
@@ -1709,11 +1826,13 @@ const AdminDashboard = () => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : todoSearchQuery) && (
+                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : todoSearchQuery) && (
                       <button
                         onClick={() => {
                           if (activeProjectTab === 'passwords') {
                             setPasswordSearchQuery('')
+                          } else if (activeProjectTab === 'notes') {
+                            setNoteSearchQuery('')
                           } else {
                             setTodoSearchQuery('')
                           }
@@ -2122,6 +2241,80 @@ const AdminDashboard = () => {
                                   }}
                                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                                   title="Smazat úkol"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {activeProjectTab === 'notes' && (
+                <div>
+                  {(() => {
+                    // Filtrování poznámek podle search query
+                    const filteredNotes = noteSearchQuery
+                      ? projectNotes.filter(n => 
+                          n.content.toLowerCase().includes(noteSearchQuery.toLowerCase())
+                        )
+                      : projectNotes
+
+                    if (filteredNotes.length === 0) {
+                      return (
+                        <div className="text-center py-12 bg-white rounded-lg shadow">
+                          <p className="text-gray-500">
+                            {noteSearchQuery ? 'Žádné poznámky neodpovídají vyhledávání' : 'Žádné poznámky pro tento projekt'}
+                          </p>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="space-y-3">
+                        {filteredNotes.map((note) => (
+                          <div
+                            key={note.id || 'unknown'}
+                            className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden p-4 border-l-4 border-primary-500"
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Obsah */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-base font-sans text-gray-800 whitespace-pre-wrap break-words">
+                                  {note.content}
+                                </p>
+                                {note.created_at && (
+                                  <p className="text-xs text-gray-400 mt-2 font-sans">
+                                    {formatDate(note.created_at)}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => openNoteModal(note)}
+                                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                  title="Upravit poznámku"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (note.id) {
+                                      handleDeleteNote(note.id)
+                                    }
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                  title="Smazat poznámku"
                                 >
                                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2742,6 +2935,69 @@ const AdminDashboard = () => {
                   className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
                 >
                   {selectedTodo ? 'Uložit změny' : 'Přidat úkol'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Note Modal - Add/Edit */}
+      {isNoteModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          onClick={closeNoteModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h3 className="text-xl font-heading font-bold text-gray-800">
+                {selectedNote ? 'Upravit poznámku' : 'Přidat novou poznámku'}
+              </h3>
+              <button
+                onClick={closeNoteModal}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {/* Content */}
+              <div>
+                <label htmlFor="note_content" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Obsah poznámky <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="note_content"
+                  value={noteFormData.content}
+                  onChange={(e) => setNoteFormData({ ...noteFormData, content: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  placeholder="Zde napište poznámku k projektu..."
+                  rows={8}
+                  required
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={closeNoteModal}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={handleSaveNote}
+                  className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  {selectedNote ? 'Uložit změny' : 'Přidat poznámku'}
                 </button>
               </div>
             </div>
