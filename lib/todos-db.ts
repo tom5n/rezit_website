@@ -8,6 +8,8 @@ export interface Todo {
   title: string
   description?: string
   is_completed?: boolean
+  is_important?: boolean
+  order?: number
   is_deleted?: boolean
 }
 
@@ -25,6 +27,7 @@ export async function getTodosByProjectId(projectId: string) {
       .select('*')
       .eq('project_id', projectId)
       .eq('is_deleted', false)
+      .order('order', { ascending: true, nullsFirst: false })
       .order('is_completed', { ascending: true })
       .order('created_at', { ascending: false })
 
@@ -62,7 +65,7 @@ export async function createTodo(data: TodoFormData): Promise<{ success: boolean
 }
 
 // Funkce pro aktualizaci todo
-export async function updateTodo(id: string, data: Partial<TodoFormData & { is_completed?: boolean }>): Promise<{ success: boolean; error?: string; data?: Todo }> {
+export async function updateTodo(id: string, data: Partial<TodoFormData & { is_completed?: boolean; is_important?: boolean; order?: number }>): Promise<{ success: boolean; error?: string; data?: Todo }> {
   try {
     const { data: updatedData, error } = await supabase
       .from('todos')

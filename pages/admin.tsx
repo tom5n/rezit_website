@@ -28,6 +28,8 @@ const AdminDashboard = () => {
   const [projectNotes, setProjectNotes] = useState<Note[]>([])
   const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes'>('todos')
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
+  const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false)
   const [todoFormData, setTodoFormData] = useState<TodoFormData>({
     project_id: '',
@@ -753,6 +755,53 @@ const AdminDashboard = () => {
       ))
     } else {
       alert('Chyba při aktualizaci úkolu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro přepnutí priority todo
+  const handleToggleTodoPriority = async (id: string, currentPriority: boolean) => {
+    const result = await updateTodo(id, { is_important: !currentPriority })
+    
+    if (result.success) {
+      setProjectTodos(prev => prev.map(todo => 
+        todo.id === id ? { ...todo, is_important: !currentPriority } : todo
+      ))
+    } else {
+      alert('Chyba při aktualizaci priority úkolu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro aktualizaci pořadí todo při drag and drop
+  const handleTodoReorder = async (draggedId: string, newIndex: number) => {
+    const todos = [...projectTodos]
+    const draggedIndex = todos.findIndex(t => t.id === draggedId)
+    
+    if (draggedIndex === -1) return
+    
+    // Přesunout úkol na novou pozici
+    const [draggedTodo] = todos.splice(draggedIndex, 1)
+    todos.splice(newIndex, 0, draggedTodo)
+    
+    // Aktualizovat pořadí všech úkolů
+    const updates = todos.map((todo, index) => ({
+      id: todo.id!,
+      order: index
+    }))
+    
+    // Aktualizovat lokální state okamžitě pro lepší UX
+    setProjectTodos(todos.map((todo, index) => ({ ...todo, order: index })))
+    
+    // Uložit do databáze
+    try {
+      await Promise.all(
+        updates.map(update => updateTodo(update.id, { order: update.order }))
+      )
+    } catch (error) {
+      console.error('Chyba při ukládání pořadí:', error)
+      // V případě chyby obnovit původní stav
+      if (selectedProjectDetail?.id) {
+        await loadProjectTodos(selectedProjectDetail.id)
+      }
     }
   }
 
@@ -2152,9 +2201,27 @@ const AdminDashboard = () => {
                         )
                       : projectTodos
                     ).sort((a, b) => {
-                      // Nejdřív nehotové úkoly, pak hotové
-                      if (a.is_completed && !b.is_completed) return 1
-                      if (!a.is_completed && b.is_completed) return -1
+                      // Nejdřív podle vlastního pořadí (pokud je nastaveno)
+                      if (a.order !== undefined && b.order !== undefined) {
+                        return a.order - b.order
+                      }
+                      if (a.order !== undefined) return -1
+                      if (b.order !== undefined) return 1
+                      
+                      // Pak podle dokončení (nehotové nahoře)
+                      const aCompleted = a.is_completed ? 1 : 0
+                      const bCompleted = b.is_completed ? 1 : 0
+                      if (aCompleted !== bCompleted) {
+                        return aCompleted - bCompleted
+                      }
+                      
+                      // Pak podle priority (důležité nahoře)
+                      const aImportant = a.is_important ? 1 : 0
+                      const bImportant = b.is_important ? 1 : 0
+                      if (aImportant !== bImportant) {
+                        return bImportant - aImportant
+                      }
+                      
                       return 0
                     })
 
@@ -2170,21 +2237,65 @@ const AdminDashboard = () => {
 
                     return (
                       <div className="space-y-3">
-                        {filteredTodos.map((todo) => (
+                        {filteredTodos.map((todo, index) => (
                           <div
                             key={todo.id || 'unknown'}
-                            onClick={() => {
-                              if (todo.id) {
+                            draggable
+                            onDragStart={(e) => {
+                              setDraggedTodoId(todo.id || null)
+                              e.dataTransfer.effectAllowed = 'move'
+                              e.dataTransfer.setData('text/html', '')
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              e.dataTransfer.dropEffect = 'move'
+                              setDragOverIndex(index)
+                            }}
+                            onDragLeave={() => {
+                              setDragOverIndex(null)
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault()
+                              if (draggedTodoId && draggedTodoId !== todo.id) {
+                                handleTodoReorder(draggedTodoId, index)
+                              }
+                              setDraggedTodoId(null)
+                              setDragOverIndex(null)
+                            }}
+                            onDragEnd={() => {
+                              setDraggedTodoId(null)
+                              setDragOverIndex(null)
+                            }}
+                            onClick={(e) => {
+                              // Pokud klikneme na drag handle nebo action buttons, neoznačuj jako hotové
+                              const target = e.target as HTMLElement
+                              if (target.closest('button') || target.closest('.cursor-grab')) {
+                                return
+                              }
+                              if (todo.id && !draggedTodoId) {
                                 handleToggleTodoComplete(todo.id, !!todo.is_completed)
                               }
                             }}
-                            className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden p-4 border-l-4 cursor-pointer ${
+                            className={`bg-white rounded-lg shadow hover:shadow-md transition-all overflow-hidden p-4 border-l-4 cursor-move ${
                               todo.is_completed 
                                 ? 'border-green-500 opacity-75' 
+                                : todo.is_important
+                                ? 'border-yellow-500'
                                 : 'border-primary-500'
+                            } ${
+                              draggedTodoId === todo.id ? 'opacity-50' : ''
+                            } ${
+                              dragOverIndex === index ? 'ring-2 ring-primary-500 ring-offset-2' : ''
                             }`}
                           >
                             <div className="flex items-center justify-between gap-3">
+                              {/* Drag Handle */}
+                              <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                </svg>
+                              </div>
+                              
                               {/* Checkbox - kolečko */}
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <div className="flex-shrink-0">
@@ -2203,13 +2314,15 @@ const AdminDashboard = () => {
 
                                 {/* Obsah */}
                                 <div className="flex-1 min-w-0">
-                                  <h3 className={`text-lg font-heading font-semibold ${
-                                    todo.is_completed 
-                                      ? 'text-gray-500 line-through' 
-                                      : 'text-gray-800'
-                                  }`}>
-                                    {todo.title}
-                                  </h3>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className={`text-lg font-heading font-semibold ${
+                                      todo.is_completed 
+                                        ? 'text-gray-500 line-through' 
+                                        : 'text-gray-800'
+                                    }`}>
+                                      {todo.title}
+                                    </h3>
+                                  </div>
                                   {todo.description && (
                                     <p className={`text-sm font-sans mt-1 ${
                                       todo.is_completed 
@@ -2224,6 +2337,24 @@ const AdminDashboard = () => {
 
                               {/* Action Buttons */}
                               <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                {/* Priority Button - Hvězdička */}
+                                <button
+                                  onClick={() => {
+                                    if (todo.id) {
+                                      handleToggleTodoPriority(todo.id, !!todo.is_important)
+                                    }
+                                  }}
+                                  className={`p-2 rounded-full transition-colors ${
+                                    todo.is_important
+                                      ? 'text-yellow-500 hover:bg-yellow-50'
+                                      : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
+                                  }`}
+                                  title={todo.is_important ? 'Odebrat prioritu' : 'Označit jako důležité'}
+                                >
+                                  <svg className="w-5 h-5" fill={todo.is_important ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                  </svg>
+                                </button>
                                 <button
                                   onClick={() => openTodoModal(todo)}
                                   className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
