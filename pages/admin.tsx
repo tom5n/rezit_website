@@ -5,6 +5,7 @@ import { getPasswordsByProjectId, createPassword, updatePassword, deletePassword
 import { getProjects, createProject, updateProject, deleteProject, Project, ProjectFormData } from '../lib/projects-db'
 import { getTodosByProjectId, createTodo, updateTodo, deleteTodo, countTodosByProjectId, Todo, TodoFormData } from '../lib/todos-db'
 import { getNotesByProjectId, createNote, updateNote, deleteNote, Note, NoteFormData } from '../lib/notes-db'
+import { getFinancesByProjectId, createFinance, updateFinance, deleteFinance, Finance, FinanceFormData } from '../lib/finances-db'
 import { CalculatorSubmission } from '../lib/supabase'
 
 // Admin dashboard component
@@ -26,7 +27,8 @@ const AdminDashboard = () => {
   const [projectPasswords, setProjectPasswords] = useState<PasswordEntry[]>([])
   const [projectTodos, setProjectTodos] = useState<Todo[]>([])
   const [projectNotes, setProjectNotes] = useState<Note[]>([])
-  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes'>('todos')
+  const [projectFinances, setProjectFinances] = useState<Finance[]>([])
+  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes' | 'finances'>('todos')
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
   const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -41,8 +43,10 @@ const AdminDashboard = () => {
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null)
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null)
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
+  const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
+  const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false)
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
   const [isPasswordVisible, setIsPasswordVisible] = useState<{ [key: string]: boolean }>({})
   const [expandedPasswords, setExpandedPasswords] = useState<{ [key: string]: boolean }>({})
@@ -50,6 +54,7 @@ const AdminDashboard = () => {
   const [passwordSearchQuery, setPasswordSearchQuery] = useState('')
   const [todoSearchQuery, setTodoSearchQuery] = useState('')
   const [noteSearchQuery, setNoteSearchQuery] = useState('')
+  const [financeSearchQuery, setFinanceSearchQuery] = useState('')
   const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
     project_id: '',
     service_name: '',
@@ -61,6 +66,13 @@ const AdminDashboard = () => {
   const [noteFormData, setNoteFormData] = useState<NoteFormData>({
     project_id: '',
     content: ''
+  })
+  const [financeFormData, setFinanceFormData] = useState<FinanceFormData>({
+    project_id: '',
+    description: '',
+    amount: undefined,
+    hours: undefined,
+    notes: ''
   })
   const [projectFormData, setProjectFormData] = useState<ProjectFormData>({
     name: '',
@@ -697,6 +709,14 @@ const AdminDashboard = () => {
     }
   }
 
+  // Funkce pro načtení finančních záznamů projektu
+  const loadProjectFinances = async (projectId: string) => {
+    const result = await getFinancesByProjectId(projectId)
+    if (result.success) {
+      setProjectFinances(result.data)
+    }
+  }
+
   // Funkce pro otevření detailu projektu
   const openProjectDetail = async (project: Project) => {
     setSelectedProjectDetail(project)
@@ -704,6 +724,7 @@ const AdminDashboard = () => {
       await loadProjectPasswords(project.id)
       await loadProjectTodos(project.id)
       await loadProjectNotes(project.id)
+      await loadProjectFinances(project.id)
     }
   }
 
@@ -713,6 +734,7 @@ const AdminDashboard = () => {
     setProjectPasswords([])
     setProjectTodos([])
     setProjectNotes([])
+    setProjectFinances([])
   }
 
   // ==================== FUNKCE PRO SPRÁVU POZNÁMEK ====================
@@ -786,6 +808,96 @@ const AdminDashboard = () => {
       }
     } else {
       alert('Chyba při mazání poznámky: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // ==================== FUNKCE PRO SPRÁVU FINANCÍ ====================
+
+  // Funkce pro otevření modalu pro přidání/editaci finančního záznamu
+  const openFinanceModal = (finance?: Finance) => {
+    if (finance) {
+      setSelectedFinance(finance)
+      setFinanceFormData({
+        project_id: finance.project_id,
+        description: finance.description,
+        amount: finance.amount,
+        hours: finance.hours,
+        notes: finance.notes || ''
+      })
+    } else {
+      setSelectedFinance(null)
+      setFinanceFormData({
+        project_id: selectedProjectDetail?.id || '',
+        description: '',
+        amount: undefined,
+        hours: undefined,
+        notes: ''
+      })
+    }
+    setIsFinanceModalOpen(true)
+  }
+
+  // Funkce pro zavření modalu finančního záznamu
+  const closeFinanceModal = () => {
+    setIsFinanceModalOpen(false)
+    setSelectedFinance(null)
+    setFinanceFormData({
+      project_id: '',
+      description: '',
+      amount: undefined,
+      hours: undefined,
+      notes: ''
+    })
+  }
+
+  // Funkce pro uložení finančního záznamu
+  const handleSaveFinance = async () => {
+    if (!financeFormData.project_id || !financeFormData.description.trim()) {
+      alert('Prosím vyplňte popis')
+      return
+    }
+
+    // Připravit data - převést prázdné stringy na undefined
+    const dataToSave: FinanceFormData = {
+      project_id: financeFormData.project_id,
+      description: financeFormData.description.trim(),
+      amount: financeFormData.amount && financeFormData.amount > 0 ? financeFormData.amount : undefined,
+      hours: financeFormData.hours && financeFormData.hours > 0 ? financeFormData.hours : undefined,
+      notes: financeFormData.notes && financeFormData.notes.trim() !== '' ? financeFormData.notes.trim() : undefined
+    }
+
+    let result
+    if (selectedFinance?.id) {
+      // Editace existujícího finančního záznamu
+      result = await updateFinance(selectedFinance.id, dataToSave)
+    } else {
+      // Vytvoření nového finančního záznamu
+      result = await createFinance(dataToSave)
+    }
+
+    if (result.success) {
+      closeFinanceModal()
+      if (selectedProjectDetail?.id) {
+        await loadProjectFinances(selectedProjectDetail.id)
+      }
+    } else {
+      alert('Chyba při ukládání finančního záznamu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro smazání finančního záznamu
+  const handleDeleteFinance = async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tento finanční záznam?')) {
+      return
+    }
+
+    const result = await deleteFinance(id)
+    if (result.success) {
+      if (selectedProjectDetail?.id) {
+        await loadProjectFinances(selectedProjectDetail.id)
+      }
+    } else {
+      alert('Chyba při mazání finančního záznamu: ' + (result.error || 'Neznámá chyba'))
     }
   }
 
@@ -2045,11 +2157,12 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (selectedProjectDetail.id) {
-                        loadProjectPasswords(selectedProjectDetail.id)
-                        loadProjectTodos(selectedProjectDetail.id)
-                        loadProjectNotes(selectedProjectDetail.id)
+                        await loadProjectPasswords(selectedProjectDetail.id)
+                        await loadProjectTodos(selectedProjectDetail.id)
+                        await loadProjectNotes(selectedProjectDetail.id)
+                        await loadProjectFinances(selectedProjectDetail.id)
                       }
                     }}
                     className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
@@ -2092,6 +2205,17 @@ const AdminDashboard = () => {
                       </svg>
                     </button>
                   )}
+                  {activeProjectTab === 'finances' && (
+                    <button
+                      onClick={() => openFinanceModal()}
+                      className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0"
+                      title="Přidat finanční záznam"
+                    >
+                      <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -2128,22 +2252,34 @@ const AdminDashboard = () => {
                   >
                     📝 Poznámky ({projectNotes.length})
                   </button>
+                  <button
+                    onClick={() => setActiveProjectTab('finances')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      activeProjectTab === 'finances' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    💰 Finance ({projectFinances.length})
+                  </button>
                   
                   {/* Searchbar */}
                   <div className="relative ml-auto flex-shrink-0">
                     <input
                       type="text"
-                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : todoSearchQuery}
+                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : todoSearchQuery}
                       onChange={(e) => {
                         if (activeProjectTab === 'passwords') {
                           setPasswordSearchQuery(e.target.value)
                         } else if (activeProjectTab === 'notes') {
                           setNoteSearchQuery(e.target.value)
+                        } else if (activeProjectTab === 'finances') {
+                          setFinanceSearchQuery(e.target.value)
                         } else {
                           setTodoSearchQuery(e.target.value)
                         }
                       }}
-                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : activeProjectTab === 'notes' ? 'Vyhledat poznámku...' : 'Vyhledat úkol...'}
+                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : activeProjectTab === 'notes' ? 'Vyhledat poznámku...' : activeProjectTab === 'finances' ? 'Vyhledat finanční záznam...' : 'Vyhledat úkol...'}
                       className="px-4 py-3 pl-11 pr-10 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans text-sm w-64"
                     />
                     <svg 
@@ -2154,13 +2290,15 @@ const AdminDashboard = () => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : todoSearchQuery) && (
+                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : todoSearchQuery) && (
                       <button
                         onClick={() => {
                           if (activeProjectTab === 'passwords') {
                             setPasswordSearchQuery('')
                           } else if (activeProjectTab === 'notes') {
                             setNoteSearchQuery('')
+                          } else if (activeProjectTab === 'finances') {
+                            setFinanceSearchQuery('')
                           } else {
                             setTodoSearchQuery('')
                           }
@@ -2740,6 +2878,123 @@ const AdminDashboard = () => {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {activeProjectTab === 'finances' && (
+                <div>
+                  {(() => {
+                    // Filtrování finančních záznamů podle search query
+                    const filteredFinances = financeSearchQuery
+                      ? projectFinances.filter(f => 
+                          f.description.toLowerCase().includes(financeSearchQuery.toLowerCase()) ||
+                          (f.amount && f.amount.toString().includes(financeSearchQuery))
+                        )
+                      : projectFinances
+
+                    // Výpočet celkových částek a hodin
+                    const totalAmount = filteredFinances.reduce((sum, f) => sum + (f.amount || 0), 0)
+                    const totalHours = filteredFinances.reduce((sum, f) => sum + (f.hours || 0), 0)
+
+                    if (filteredFinances.length === 0) {
+                      return (
+                        <div className="text-center py-12 bg-white rounded-lg shadow">
+                          <p className="text-gray-500">
+                            {financeSearchQuery ? 'Žádné finanční záznamy neodpovídají vyhledávání' : 'Žádné finanční záznamy pro tento projekt'}
+                          </p>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div>
+                        {/* Souhrn */}
+                        {(totalAmount > 0 || totalHours > 0) && (
+                          <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg p-4 mb-4 border border-primary-200">
+                            <div className="flex flex-wrap gap-4 justify-between items-center">
+                              {totalAmount > 0 && (
+                                <div>
+                                  <p className="text-sm text-gray-600 font-sans">Celkem naúčtováno</p>
+                                  <p className="text-2xl font-bold text-primary-700 font-sans">{totalAmount.toLocaleString('cs-CZ')} Kč</p>
+                                </div>
+                              )}
+                              {totalHours > 0 && (
+                                <div>
+                                  <p className="text-sm text-gray-600 font-sans">Celkem hodin</p>
+                                  <p className="text-2xl font-bold text-primary-700 font-sans">{totalHours.toFixed(1)} h</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Seznam záznamů */}
+                        <div className="space-y-3">
+                          {filteredFinances.map((finance) => (
+                            <div
+                              key={finance.id || 'unknown'}
+                              className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden p-4 border-l-4 border-primary-500"
+                            >
+                              <div className="flex items-center justify-between gap-4">
+                                {/* Obsah */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-base font-sans font-semibold text-gray-800">
+                                    {finance.description}
+                                  </p>
+                                  <div className="flex flex-wrap gap-4 mt-2">
+                                    {finance.amount && (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm text-gray-600 font-sans">Částka:</span>
+                                        <span className="text-sm font-semibold text-primary-600 font-sans">{finance.amount.toLocaleString('cs-CZ')} Kč</span>
+                                      </div>
+                                    )}
+                                    {finance.hours && (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm text-gray-600 font-sans">Hodiny:</span>
+                                        <span className="text-sm font-semibold text-primary-600 font-sans">{finance.hours.toFixed(1)} h</span>
+                                      </div>
+                                    )}
+                                    {finance.notes && (
+                                      <div className="w-full mt-2">
+                                        <span className="text-sm text-gray-600 font-sans">Poznámka:</span>
+                                        <p className="text-sm text-gray-700 font-sans mt-1 whitespace-pre-wrap">{finance.notes}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <button
+                                    onClick={() => openFinanceModal(finance)}
+                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                    title="Upravit finanční záznam"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (finance.id) {
+                                        handleDeleteFinance(finance.id)
+                                      }
+                                    }}
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                    title="Smazat finanční záznam"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )
                   })()}
@@ -3487,6 +3742,120 @@ const AdminDashboard = () => {
                   className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
                 >
                   {selectedTodo ? 'Uložit změny' : 'Přidat úkol'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Finance Modal - Add/Edit */}
+      {isFinanceModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          onClick={closeFinanceModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-heading font-bold text-gray-800">
+                {selectedFinance ? 'Upravit finanční záznam' : 'Přidat finanční záznam'}
+              </h2>
+              <button
+                onClick={closeFinanceModal}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-6 space-y-4">
+              {/* Description */}
+              <div>
+                <label htmlFor="finance-description" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Popis <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="finance-description"
+                  value={financeFormData.description}
+                  onChange={(e) => setFinanceFormData({ ...financeFormData, description: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  placeholder="Za co (např. Web design, Vývoj funkcí...)"
+                />
+              </div>
+
+              {/* Amount and Hours */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Amount */}
+                <div>
+                  <label htmlFor="finance-amount" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Částka (Kč)
+                  </label>
+                  <input
+                    type="number"
+                    id="finance-amount"
+                    value={financeFormData.amount || ''}
+                    onChange={(e) => setFinanceFormData({ ...financeFormData, amount: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                {/* Hours */}
+                <div>
+                  <label htmlFor="finance-hours" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Odpracované hodiny
+                  </label>
+                  <input
+                    type="number"
+                    id="finance-hours"
+                    value={financeFormData.hours || ''}
+                    onChange={(e) => setFinanceFormData({ ...financeFormData, hours: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="0"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label htmlFor="finance-notes" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Poznámka (volitelné)
+                </label>
+                <textarea
+                  id="finance-notes"
+                  value={financeFormData.notes || ''}
+                  onChange={(e) => setFinanceFormData({ ...financeFormData, notes: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  placeholder="Další informace k finančnímu záznamu..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={closeFinanceModal}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={handleSaveFinance}
+                  className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  {selectedFinance ? 'Uložit změny' : 'Přidat finanční záznam'}
                 </button>
               </div>
             </div>
