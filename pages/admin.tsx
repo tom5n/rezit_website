@@ -66,7 +66,8 @@ const AdminDashboard = () => {
     name: '',
     display_name: '',
     description: '',
-    status: 'active'
+    status: 'active',
+    deadline: ''
   })
   const router = useRouter()
 
@@ -149,6 +150,54 @@ const AdminDashboard = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('cs-CZ')
+  }
+
+  // Funkce pro výpočet zbývajících dní do deadline
+  const getDaysUntilDeadline = (deadline: string): number => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const deadlineDate = new Date(deadline)
+    deadlineDate.setHours(0, 0, 0, 0)
+    const diffTime = deadlineDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  // Funkce pro formátování zbývajícího času do deadline
+  const formatTimeUntilDeadline = (deadline: string): string => {
+    const days = getDaysUntilDeadline(deadline)
+    
+    if (days < 0) {
+      return `Přes ${Math.abs(days)} ${getPluralForm(Math.abs(days), 'den', 'dny', 'dní')}`
+    }
+    
+    if (days === 0) {
+      return 'Dnes'
+    }
+    
+    if (days === 1) {
+      return 'Zítra'
+    }
+    
+    if (days < 7) {
+      return `Za ${days} ${getPluralForm(days, 'den', 'dny', 'dní')}`
+    }
+    
+    if (days < 30) {
+      const weeks = Math.floor(days / 7)
+      const remainingDays = days % 7
+      if (remainingDays === 0) {
+        return `Za ${weeks} ${getPluralForm(weeks, 'týden', 'týdny', 'týdnů')}`
+      }
+      return `Za ${weeks} ${getPluralForm(weeks, 'týden', 'týdny', 'týdnů')} a ${remainingDays} ${getPluralForm(remainingDays, 'den', 'dny', 'dní')}`
+    }
+    
+    const months = Math.floor(days / 30)
+    const remainingDays = days % 30
+    if (remainingDays === 0) {
+      return `Za ${months} ${getPluralForm(months, 'měsíc', 'měsíce', 'měsíců')}`
+    }
+    return `Za ${months} ${getPluralForm(months, 'měsíc', 'měsíce', 'měsíců')} a ${remainingDays} ${getPluralForm(remainingDays, 'den', 'dny', 'dní')}`
   }
 
   const formatCurrency = (amount: number) => {
@@ -479,7 +528,8 @@ const AdminDashboard = () => {
         name: project.name,
         display_name: project.display_name,
         description: project.description || '',
-        status: project.status || 'active'
+        status: project.status || 'active',
+        deadline: project.deadline || ''
       })
     } else {
       setSelectedProject(null)
@@ -487,7 +537,8 @@ const AdminDashboard = () => {
         name: '',
         display_name: '',
         description: '',
-        status: 'active'
+        status: 'active',
+        deadline: ''
       })
     }
     setIsProjectModalOpen(true)
@@ -501,7 +552,8 @@ const AdminDashboard = () => {
       name: '',
       display_name: '',
       description: '',
-      status: 'active'
+      status: 'active',
+      deadline: ''
     })
   }
 
@@ -512,13 +564,29 @@ const AdminDashboard = () => {
       return
     }
 
+    // Připravit data pro uložení - pokud je deadline prázdný string, poslat null pro smazání
+    const dataToSave: any = {
+      name: projectFormData.name,
+      display_name: projectFormData.display_name,
+      description: projectFormData.description || undefined,
+      status: projectFormData.status || 'active'
+    }
+    
+    // Explicitně nastavit deadline - buď hodnotu nebo null pro smazání
+    if (projectFormData.deadline && projectFormData.deadline.trim() !== '') {
+      dataToSave.deadline = projectFormData.deadline
+    } else {
+      // Pokud je deadline prázdný, poslat null pro smazání
+      dataToSave.deadline = null
+    }
+
     let result
     if (selectedProject?.id) {
       // Editace existujícího projektu
-      result = await updateProject(selectedProject.id, projectFormData)
+      result = await updateProject(selectedProject.id, dataToSave)
     } else {
       // Vytvoření nového projektu
-      result = await createProject(projectFormData)
+      result = await createProject(dataToSave)
     }
 
     if (result.success) {
@@ -526,6 +594,19 @@ const AdminDashboard = () => {
       loadData()
     } else {
       alert('Chyba při ukládání projektu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro přepnutí hlavního projektu
+  const handleToggleProjectFavorite = async (id: string, currentFavorite: boolean) => {
+    const result = await updateProject(id, { is_favorite: !currentFavorite })
+    
+    if (result.success) {
+      setProjects(prev => prev.map(project => 
+        project.id === id ? { ...project, is_favorite: !currentFavorite } : project
+      ))
+    } else {
+      alert('Chyba při aktualizaci projektu: ' + (result.error || 'Neznámá chyba'))
     }
   }
 
@@ -551,7 +632,13 @@ const AdminDashboard = () => {
   // Filtrování projektů podle statusu
   const filteredProjects = activeProjectFilter === 'all'
     ? [...projects].sort((a, b) => {
-        // V sekci "Vše" - nejdřív čekající (active), pak dokončené (completed)
+        // Nejdřív hlavní projekty (is_favorite)
+        const aFavorite = a.is_favorite ? 1 : 0
+        const bFavorite = b.is_favorite ? 1 : 0
+        if (aFavorite !== bFavorite) {
+          return bFavorite - aFavorite // Hlavní projekty nahoře
+        }
+        // Pak podle statusu - nejdřív čekající (active), pak dokončené (completed)
         const aStatus = a.status || 'active'
         const bStatus = b.status || 'active'
         if (aStatus === 'active' && bStatus === 'completed') return -1
@@ -559,8 +646,18 @@ const AdminDashboard = () => {
         return 0
       })
     : activeProjectFilter === 'active'
-    ? projects.filter(p => p.status === 'active' || !p.status)
-    : projects.filter(p => p.status === 'completed')
+    ? projects.filter(p => p.status === 'active' || !p.status).sort((a, b) => {
+        // Hlavní projekty nahoře i v sekci "Probíhající"
+        const aFavorite = a.is_favorite ? 1 : 0
+        const bFavorite = b.is_favorite ? 1 : 0
+        return bFavorite - aFavorite
+      })
+    : projects.filter(p => p.status === 'completed').sort((a, b) => {
+        // Hlavní projekty nahoře i v sekci "Dokončené"
+        const aFavorite = a.is_favorite ? 1 : 0
+        const bFavorite = b.is_favorite ? 1 : 0
+        return bFavorite - aFavorite
+      })
 
   // Funkce pro načtení hesel projektu
   const loadProjectPasswords = async (projectId: string) => {
@@ -1570,7 +1667,9 @@ const AdminDashboard = () => {
                           {/* Mobile Card */}
                           <div 
                             onClick={() => openProjectDetail(project)}
-                            className="md:hidden bg-white rounded-lg shadow p-4 cursor-pointer active:scale-[0.98] transition-transform"
+                            className={`md:hidden bg-white rounded-lg shadow p-4 cursor-pointer active:scale-[0.98] transition-transform border-2 ${
+                              project.is_favorite ? 'border-primary-500' : 'border-transparent'
+                            }`}
                           >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
@@ -1610,16 +1709,58 @@ const AdminDashboard = () => {
                                   <span className="text-gray-500">{getPluralForm(passwordCount, 'heslo', 'hesla', 'hesel')}</span>
                                 </div>
                               </div>
-                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
+                              <div className="flex items-center gap-2">
+                                {/* Favorite Button - Mobile */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (project.id) {
+                                      handleToggleProjectFavorite(project.id, !!project.is_favorite)
+                                    }
+                                  }}
+                                  className={`p-1.5 rounded-full transition-colors ${
+                                    project.is_favorite
+                                      ? 'text-yellow-500'
+                                      : 'text-gray-400'
+                                  }`}
+                                  title={project.is_favorite ? 'Odebrat z hlavních' : 'Označit jako hlavní'}
+                                >
+                                  <svg className="w-4 h-4" fill={project.is_favorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                  </svg>
+                                </button>
+                                {/* Deadline v mobilní kartě */}
+                                {project.deadline && (
+                                  <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                                    getDaysUntilDeadline(project.deadline) <= 5
+                                      ? 'bg-red-100 text-red-700'
+                                      : getDaysUntilDeadline(project.deadline) <= 14
+                                      ? 'bg-orange-100 text-orange-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                  }`}>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{formatTimeUntilDeadline(project.deadline)}</span>
+                                  </div>
+                                )}
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
                             </div>
                           </div>
 
                           {/* Desktop Card */}
                           <div 
                             onClick={() => openProjectDetail(project)}
-                            className="hidden md:block bg-white rounded-lg shadow p-5 relative cursor-pointer hover:shadow-lg hover:border-primary-200 border-2 border-transparent transition-all duration-200"
+                            className={`hidden md:block bg-white rounded-lg shadow p-5 relative cursor-pointer hover:shadow-lg border-2 transition-all duration-200 ${
+                              project.is_favorite
+                                ? 'border-primary-500'
+                                : project.deadline && getDaysUntilDeadline(project.deadline) <= 5
+                                ? 'hover:border-red-200 border-red-200'
+                                : 'hover:border-primary-200 border-transparent'
+                            }`}
                           >
                             {/* Top Section */}
                             <div className="flex justify-between items-start mb-6">
@@ -1643,8 +1784,21 @@ const AdminDashboard = () => {
                                 </p>
                               </div>
                               
-                              {/* Datum v pravém horním rohu */}
-                              {project.created_at && (
+                              {/* Deadline nebo Datum v pravém horním rohu */}
+                              {project.deadline ? (
+                                <div className={`flex items-center gap-1.5 text-xs ml-4 flex-shrink-0 font-semibold px-2 py-1 rounded-full ${
+                                  getDaysUntilDeadline(project.deadline) <= 5
+                                    ? 'bg-red-100 text-red-700'
+                                    : getDaysUntilDeadline(project.deadline) <= 14
+                                    ? 'bg-orange-100 text-orange-700'
+                                    : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>{formatTimeUntilDeadline(project.deadline)}</span>
+                                </div>
+                              ) : project.created_at && (
                                 <div className="flex items-center gap-1.5 text-xs text-gray-400 ml-4 flex-shrink-0">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1677,13 +1831,28 @@ const AdminDashboard = () => {
                               </div>
                               
                               {/* Action Buttons vpravo */}
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                {/* Favorite Button */}
+                                <button
+                                  onClick={() => {
+                                    if (project.id) {
+                                      handleToggleProjectFavorite(project.id, !!project.is_favorite)
+                                    }
+                                  }}
+                                  className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${
+                                    project.is_favorite
+                                      ? 'text-yellow-500 hover:bg-yellow-50'
+                                      : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
+                                  }`}
+                                  title={project.is_favorite ? 'Odebrat z hlavních' : 'Označit jako hlavní'}
+                                >
+                                  <svg className="w-4 h-4" fill={project.is_favorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                  </svg>
+                                </button>
                                 {/* Edit Button */}
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    openProjectModal(project)
-                                  }}
+                                  onClick={() => openProjectModal(project)}
                                   className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
                                   title="Upravit projekt"
                                 >
@@ -2958,6 +3127,32 @@ const AdminDashboard = () => {
                   placeholder="Popis projektu..."
                   rows={3}
                 />
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <label htmlFor="deadline" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Deadline (volitelné)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    id="deadline"
+                    value={projectFormData.deadline || ''}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, deadline: e.target.value })}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  />
+                  {projectFormData.deadline && (
+                    <button
+                      type="button"
+                      onClick={() => setProjectFormData({ ...projectFormData, deadline: '' })}
+                      className="px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-sans font-medium text-sm whitespace-nowrap"
+                      title="Odebrat deadline"
+                    >
+                      Odebrat
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div>

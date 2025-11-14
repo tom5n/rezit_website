@@ -8,6 +8,8 @@ export interface Project {
   display_name: string // Black Rose Barber, MS Studio Hair, atd.
   description?: string
   status?: 'active' | 'completed' // active = čekající/aktivní, completed = dokončené
+  deadline?: string // Datum deadline projektu
+  is_favorite?: boolean // Hlavní projekt (zobrazí se nahoře)
   is_deleted?: boolean
 }
 
@@ -16,6 +18,7 @@ export interface ProjectFormData {
   display_name: string
   description?: string
   status?: 'active' | 'completed'
+  deadline?: string
 }
 
 // Funkce pro získání všech projektů
@@ -83,7 +86,7 @@ export async function createProject(data: ProjectFormData): Promise<{ success: b
 }
 
 // Funkce pro aktualizaci projektu
-export async function updateProject(id: string, data: Partial<ProjectFormData>): Promise<{ success: boolean; error?: string; data?: Project }> {
+export async function updateProject(id: string, data: Partial<ProjectFormData & { is_favorite?: boolean }>): Promise<{ success: boolean; error?: string; data?: Project }> {
   try {
     const { data: updatedData, error } = await supabase
       .from('projects')
