@@ -389,7 +389,7 @@ const AdminDashboard = () => {
     setIsPasswordModalOpen(false)
     setSelectedPassword(null)
     setPasswordFormData({
-      project: '',
+      project_id: '',
       service_name: '',
       username: '',
       password: '',
