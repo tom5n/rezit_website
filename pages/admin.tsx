@@ -669,6 +669,12 @@ const AdminDashboard = () => {
         const bStatus = b.status || 'active'
         if (aStatus === 'active' && bStatus === 'completed') return -1
         if (aStatus === 'completed' && bStatus === 'active') return 1
+        // Pak podle počtu nedokončených todos - více todos = výše
+        const aTodoCount = a.id ? (projectTodoCounts[a.id] || 0) : 0
+        const bTodoCount = b.id ? (projectTodoCounts[b.id] || 0) : 0
+        if (aTodoCount !== bTodoCount) {
+          return bTodoCount - aTodoCount // Více todos nahoře
+        }
         return 0
       })
     : activeProjectFilter === 'active'
@@ -676,13 +682,31 @@ const AdminDashboard = () => {
         // Hlavní projekty nahoře i v sekci "Probíhající"
         const aFavorite = a.is_favorite ? 1 : 0
         const bFavorite = b.is_favorite ? 1 : 0
-        return bFavorite - aFavorite
+        if (aFavorite !== bFavorite) {
+          return bFavorite - aFavorite
+        }
+        // Pak podle počtu nedokončených todos - více todos = výše
+        const aTodoCount = a.id ? (projectTodoCounts[a.id] || 0) : 0
+        const bTodoCount = b.id ? (projectTodoCounts[b.id] || 0) : 0
+        if (aTodoCount !== bTodoCount) {
+          return bTodoCount - aTodoCount // Více todos nahoře
+        }
+        return 0
       })
     : projects.filter(p => p.status === 'completed').sort((a, b) => {
         // Hlavní projekty nahoře i v sekci "Dokončené"
         const aFavorite = a.is_favorite ? 1 : 0
         const bFavorite = b.is_favorite ? 1 : 0
-        return bFavorite - aFavorite
+        if (aFavorite !== bFavorite) {
+          return bFavorite - aFavorite
+        }
+        // Pak podle počtu nedokončených todos - více todos = výše
+        const aTodoCount = a.id ? (projectTodoCounts[a.id] || 0) : 0
+        const bTodoCount = b.id ? (projectTodoCounts[b.id] || 0) : 0
+        if (aTodoCount !== bTodoCount) {
+          return bTodoCount - aTodoCount // Více todos nahoře
+        }
+        return 0
       })
 
   // Funkce pro načtení hesel projektu
@@ -976,6 +1000,16 @@ const AdminDashboard = () => {
       setProjectTodos(prev => prev.map(todo => 
         todo.id === id ? { ...todo, is_completed: !currentStatus } : todo
       ))
+      // Aktualizovat počet todos pro projekt
+      if (selectedProjectDetail?.id) {
+        const countResult = await countTodosByProjectId(selectedProjectDetail.id)
+        if (countResult.success) {
+          setProjectTodoCounts(prev => ({
+            ...prev,
+            [selectedProjectDetail.id!]: countResult.count || 0
+          }))
+        }
+      }
     } else {
       alert('Chyba při aktualizaci úkolu: ' + (result.error || 'Neznámá chyba'))
     }
