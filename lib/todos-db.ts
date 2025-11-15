@@ -106,7 +106,7 @@ export async function deleteTodo(id: string): Promise<{ success: boolean; error?
   }
 }
 
-// Funkce pro počítání todos podle project_id
+// Funkce pro počítání todos podle project_id (pouze nehotové todos)
 export async function countTodosByProjectId(projectId: string): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
     const { count, error } = await supabase
@@ -114,6 +114,7 @@ export async function countTodosByProjectId(projectId: string): Promise<{ succes
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId)
       .eq('is_deleted', false)
+      .neq('is_completed', true)
 
     if (error) {
       console.error('Chyba při počítání todos podle projektu:', error)
