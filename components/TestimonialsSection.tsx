@@ -19,7 +19,7 @@ const TestimonialsSection = () => {
       id: 1,
       name: "Ivana Jiráková",
       business: "Podnikatelka & mentorka",
-      quote: "Konečně mám systém, který funguje! Klienti si mohou snadno rezervovat schůzky a mentoringové konzultace.",
+      quote: "S rezervačním systémem jsem maximálně spokojená. Všechno od prvního kontaktu až po finální nastavení proběhlo rychle, hladce a s úžasně lidským přístupem. Systém je přehledný, intuitivní a přesně odpovídá tomu, co moje podnikání potřebuje. Za mě skvělá spolupráce a můžu jen doporučit.",
       avatar: "/images/testimonials/jirakova.jpg",
       logo: "/images/clients/ivanajirakova.png"
     },
@@ -35,7 +35,7 @@ const TestimonialsSection = () => {
       id: 3,
       name: "Markéta Starobová",
       business: "MS Studio Svítkov",
-      quote: "Jako kadeřnice potřebuju mít všechno pod kontrolou. Rezit mi ušetřilo spoustu času a klientky se teď rezervují samy.",
+      quote: "Potřebovala jsem funkční a jednoduchý rezervační systém a výsledek předčil moje očekávání. Systém je krásně přehledný, snadno se ovládá a moji klienti si ho okamžitě oblíbili. Díky rezervačnímu systému jsem navíc získala mnoho nových klientů. Oceňuji profesionální jednání, skvělou komunikaci a ochotu vše vysvětlit. Jsem opravdu nadšená a doporučuji všemi deseti.",
       avatar: "/images/testimonials/marketa.jpg",
       logo: "/images/clients/msstudiohair.png"
     }
