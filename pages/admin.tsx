@@ -1094,6 +1094,22 @@ const AdminDashboard = () => {
           {/* Main Navigation - Centered */}
           <div className="flex-1 flex items-center justify-center">
             <nav className="flex flex-col space-y-8 text-center">
+              {/* Projekty - bez nadpisu */}
+              <button 
+                onClick={() => {
+                  setActiveSection('projects')
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`text-gray-900 hover:text-primary-500 font-sans transition-colors text-2xl flex items-center gap-3 justify-center ${
+                  activeSection === 'projects' ? 'text-primary-500' : ''
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Projekty
+              </button>
+              
               <button 
                 onClick={() => {
                   setActiveSection('calculator')
@@ -1122,21 +1138,6 @@ const AdminDashboard = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
                 Kontaktní formulář
-              </button>
-              
-              <button 
-                onClick={() => {
-                  setActiveSection('projects')
-                  setIsMobileMenuOpen(false)
-                }}
-                className={`text-gray-900 hover:text-primary-500 font-sans transition-colors text-2xl flex items-center gap-3 justify-center ${
-                  activeSection === 'projects' ? 'text-primary-500' : ''
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                Projekty
               </button>
             </nav>
           </div>
@@ -1173,10 +1174,30 @@ const AdminDashboard = () => {
         
         <nav className="flex-1 mt-6 overflow-y-auto">
           <div className="px-6 py-2">
-            <h2 className="text-sm font-heading font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Sekce
-            </h2>
+            {/* Projekty - bez nadpisu */}
+            <div className="space-y-2 mb-6">
+              <button 
+                onClick={() => setActiveSection('projects')}
+                className={`w-full text-left px-3 py-2 rounded-lg font-sans text-base transition-all duration-200 relative ${
+                  activeSection === 'projects' 
+                    ? 'bg-primary-100 text-primary-700 border-l-4 border-primary-500' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800 hover:border-l-4 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Projekty
+                </div>
+              </button>
+            </div>
+
+            {/* KLIENTI sekce */}
             <div className="space-y-2">
+              <h2 className="text-sm font-heading font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                KLIENTI
+              </h2>
               <button 
                 onClick={() => setActiveSection('calculator')}
                 className={`w-full text-left px-3 py-2 rounded-lg font-sans text-base transition-all duration-200 relative ${
@@ -1206,22 +1227,6 @@ const AdminDashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                   Kontaktní formulář
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => setActiveSection('projects')}
-                className={`w-full text-left px-3 py-2 rounded-lg font-sans text-base transition-all duration-200 relative ${
-                  activeSection === 'projects' 
-                    ? 'bg-primary-100 text-primary-700 border-l-4 border-primary-500' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800 hover:border-l-4 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  Projekty
                 </div>
               </button>
             </div>
