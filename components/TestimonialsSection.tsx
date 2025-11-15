@@ -27,7 +27,7 @@ const TestimonialsSection = () => {
       id: 2,
       name: "Suzi Pu",
       business: "Black Rose Barber",
-      quote: "",
+      quote: "Nechala jsem si vytvořit rezervační systém na míru a jsem maximálně spokojená. Vše proběhlo rychle, profesionálně a přesně podle mých potřeb. Systém je přehledný, jednoduchý a klienti ho milují. Skvělá domluva, lidský přístup a perfektní výsledek. Doporučuju!",
       avatar: "/images/testimonials/suzipu.jpg",
       logo: "/images/clients/blackrosebarber.png"
     },
@@ -153,14 +153,14 @@ const TestimonialsSection = () => {
                 style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
               >
                 {testimonials.map((testimonial, index) => (
-                  <div key={testimonial.id} className="w-full flex-shrink-0 p-8 border border-gray-100 rounded-xl bg-white/50">
+                  <div key={testimonial.id} className="w-full flex-shrink-0 p-8 border border-gray-100 rounded-xl bg-white/50 flex flex-col min-h-[300px]">
                     {/* Quote */}
-                    <blockquote className="text-2xl text-gray-800 leading-relaxed mb-8 italic font-light text-left">
+                    <blockquote className="text-2xl text-gray-800 leading-relaxed mb-8 italic font-light text-left flex-grow">
                       "{testimonial.quote}"
                     </blockquote>
                     
-                    {/* Author & Logo */}
-                    <div className="flex items-center justify-between">
+                    {/* Author & Logo - Always at bottom */}
+                    <div className="flex items-center justify-between mt-auto">
                       {/* Left - Author */}
                       <div className="flex items-center space-x-4">
                         <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
@@ -198,14 +198,14 @@ const TestimonialsSection = () => {
           {/* Mobile Simple Layout - All 3 visible */}
           <div className="md:hidden space-y-6">
             {testimonials.map((testimonial, index) => (
-              <div key={testimonial.id} className="p-6 border border-gray-100 rounded-xl bg-white/50">
+              <div key={testimonial.id} className="p-6 border border-gray-100 rounded-xl bg-white/50 flex flex-col min-h-[200px]">
                 {/* Quote */}
-                <blockquote className="text-lg text-gray-800 leading-relaxed mb-6 italic font-light text-left">
+                <blockquote className="text-lg text-gray-800 leading-relaxed mb-6 italic font-light text-left flex-grow">
                   "{testimonial.quote}"
                 </blockquote>
                 
-                {/* Author */}
-                <div className="flex items-center space-x-3">
+                {/* Author - Always at bottom */}
+                <div className="flex items-center space-x-3 mt-auto">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
                     <img 
                       src={testimonial.avatar} 
