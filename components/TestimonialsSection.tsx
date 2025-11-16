@@ -35,7 +35,7 @@ const TestimonialsSection = () => {
       id: 3,
       name: "Markéta Starobová",
       business: "MS Studio Svítkov",
-      quote: "Potřebovala jsem funkční a jednoduchý rezervační systém a výsledek předčil moje očekávání. Systém je krásně přehledný, snadno se ovládá a moji klienti si ho okamžitě oblíbili. Díky rezervačnímu systému jsem navíc získala mnoho nových klientů. Oceňuji profesionální jednání, skvělou komunikaci a ochotu vše vysvětlit. Jsem opravdu nadšená a doporučuji všemi deseti.",
+      quote: "Potřebovala jsem funkční a jednoduchý rezervační systém a výsledek předčil moje očekávání. Systém je krásně přehledný, snadno se ovládá a moji klienti si ho okamžitě oblíbili. Díky rezervačnímu systému jsem navíc získala mnoho nových klientů. Oceňuji profesionální jednání, skvělou komunikaci a ochotu vše vysvětlit. Jsem opravdu nadšená a spokojená.",
       avatar: "/images/testimonials/marketa.jpg",
       logo: "/images/clients/msstudiohair.png"
     },
