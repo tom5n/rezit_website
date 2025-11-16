@@ -38,6 +38,14 @@ const TestimonialsSection = () => {
       quote: "Potřebovala jsem funkční a jednoduchý rezervační systém a výsledek předčil moje očekávání. Systém je krásně přehledný, snadno se ovládá a moji klienti si ho okamžitě oblíbili. Díky rezervačnímu systému jsem navíc získala mnoho nových klientů. Oceňuji profesionální jednání, skvělou komunikaci a ochotu vše vysvětlit. Jsem opravdu nadšená a doporučuji všemi deseti.",
       avatar: "/images/testimonials/marketa.jpg",
       logo: "/images/clients/msstudiohair.png"
+    },
+    {
+      id: 4,
+      name: "Patrik",
+      business: "Nastřiženo Barber",
+      quote: "Skvělá práce! Rezervační systém, který mi vytvořili, je moderní, přehledný a přesně podle mého stylu. Navíc mi ušetřili spoustu času i peněz, protože všechno běží automaticky a zákazníci si mohou rezervace vytvářet sami. Doporučuju všemi deseti!",
+      avatar: "/images/testimonials/nastrizeno.jpg",
+      logo: "/images/clients/nastrizenobarber.png"
     }
   ]
 
