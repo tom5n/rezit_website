@@ -1,9 +1,17 @@
 import React from 'react'
 import Layout from '@/components/Layout'
+import SEO from '@/components/SEO'
 
 export default function OchranaUdaju() {
   return (
-    <Layout>
+    <>
+      <SEO
+        title="Ochrana osobních údajů | rezit"
+        description="Informace o ochraně osobních údajů a GDPR. Zjistěte, jak zpracováváme a chráníme vaše osobní údaje v rezervačním systému rezit."
+        keywords="ochrana osobních údajů, GDPR, soukromí, rezervační systém"
+        url="https://rezit.cz/ochrana-udaju"
+      />
+      <Layout>
       <section className="min-h-screen bg-white py-24">
         <div className="container-max px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
@@ -109,6 +117,7 @@ export default function OchranaUdaju() {
         </div>
       </section>
     </Layout>
+    </>
   )
 }
 

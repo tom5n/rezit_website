@@ -2,15 +2,14 @@ import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { Toaster } from 'react-hot-toast'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
+      <GoogleAnalytics />
       <Head>
-        <title>rezit - Rezervační systém bez měsíčních poplatků</title>
-        <meta name="description" content="Rezervační systém šitý na míru bez měsíčních poplatků. Ušetřete tisíce ročně s jednorázovou investicí." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/images/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </Head>
       <Component {...pageProps} />
       <Toaster 

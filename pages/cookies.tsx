@@ -1,9 +1,17 @@
 import React from 'react'
 import Layout from '@/components/Layout'
+import SEO from '@/components/SEO'
 
 export default function Cookies() {
   return (
-    <Layout>
+    <>
+      <SEO
+        title="Zásady používání cookies | rezit"
+        description="Informace o používání cookies na webu rezit. Zjistěte, jaké cookies používáme a jak je můžete spravovat."
+        keywords="cookies, zásady cookies, soukromí"
+        url="https://rezit.cz/cookies"
+      />
+      <Layout>
       <section className="min-h-screen bg-white py-24">
         <div className="container-max px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
@@ -83,6 +91,7 @@ export default function Cookies() {
         </div>
       </section>
     </Layout>
+    </>
   )
 }
 

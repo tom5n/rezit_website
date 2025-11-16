@@ -174,7 +174,7 @@ const TestimonialsSection = () => {
                         <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
                           <img 
                             src={testimonial.avatar} 
-                            alt={testimonial.name}
+                            alt={`${testimonial.name} - recenze rezervačního systému rezit`}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -192,7 +192,7 @@ const TestimonialsSection = () => {
                       <div className="w-28 h-16 flex items-center justify-center">
                         <img 
                           src={testimonial.logo} 
-                          alt={`${testimonial.business} logo`}
+                          alt={`Logo ${testimonial.business} - klient rezervačního systému rezit`}
                           className="max-w-full max-h-full object-contain opacity-60"
                         />
                       </div>
@@ -217,7 +217,7 @@ const TestimonialsSection = () => {
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
                     <img 
                       src={testimonial.avatar} 
-                      alt={testimonial.name}
+                      alt={`${testimonial.name} - recenze rezervačního systému rezit`}
                       className="w-full h-full object-cover"
                     />
                   </div>

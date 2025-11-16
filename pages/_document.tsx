@@ -4,11 +4,17 @@ export default function Document() {
   return (
     <Html lang="cs">
       <Head>
-        <title>rezit - Rezervační systém bez měsíčních poplatků</title>
-        <meta name="description" content="Rezervační systém šitý na míru bez měsíčních poplatků. Ušetřete tisíce ročně s jednorázovou investicí." />
+        {/* Favicons */}
         <link rel="icon" href="/images/favicon.ico" />
         <link rel="shortcut icon" href="/images/favicon.ico" />
         <link rel="apple-touch-icon" href="/images/favicon.ico" />
+        
+        {/* Preconnect for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* DNS Prefetch */}
+        <link rel="dns-prefetch" href="https://kmaphjllonhkprofophw.supabase.co" />
       </Head>
       <body>
         <Main />

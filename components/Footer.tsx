@@ -11,7 +11,7 @@ const Footer = () => {
               <div className="mb-6">
                 <img 
                   src="/images/rezitlogo2.svg" 
-                  alt="Zabookuj" 
+                  alt="rezit - Rezervační systém bez měsíčních poplatků" 
                   className="h-7 w-auto"
                 />
               </div>

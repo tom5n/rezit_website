@@ -146,7 +146,7 @@ const HeroSection = () => {
           }`}>
             <img 
               src="/images/heroimg_rezit.webp" 
-              alt="Zabookuj - Rezervační systém" 
+              alt="rezit - Rezervační systém pro kadeřnictví, salony a barber shopy bez měsíčních poplatků" 
               className={`w-full h-auto mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl transition-transform duration-1000 ${
                 imageEnlarged ? 'scale-105' : 'scale-100'
               } hover:scale-110`}
