@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'high' | 'medium' | 'low' | 'deleted' | 'favorite'>('all')
   const [activeContactTab, setActiveContactTab] = useState<'all' | 'resolved' | 'deleted'>('all')
-  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects'>('calculator')
+  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects'>('projects')
   const [activeProjectFilter, setActiveProjectFilter] = useState<'all' | 'active' | 'completed'>('all')
   const [projects, setProjects] = useState<Project[]>([])
   const [projectPasswordCounts, setProjectPasswordCounts] = useState<{ [key: string]: number }>({})
