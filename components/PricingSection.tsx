@@ -263,7 +263,7 @@ const PricingSection = () => {
                   <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Integrace platebních metod
+                  Prioritní podpora a zákaznický servis
                 </li>
               </ul>
             </div>
