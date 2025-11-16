@@ -5,8 +5,9 @@ import { getPasswordsByProjectId, createPassword, updatePassword, deletePassword
 import { getProjects, createProject, updateProject, deleteProject, Project, ProjectFormData } from '../lib/projects-db'
 import { getTodosByProjectId, createTodo, updateTodo, deleteTodo, countTodosByProjectId, Todo, TodoFormData } from '../lib/todos-db'
 import { getNotesByProjectId, createNote, updateNote, deleteNote, Note, NoteFormData } from '../lib/notes-db'
-import { getFinancesByProjectId, createFinance, updateFinance, deleteFinance, Finance, FinanceFormData } from '../lib/finances-db'
+import { getFinancesByProjectId, getAllFinances, createFinance, updateFinance, deleteFinance, Finance, FinanceFormData } from '../lib/finances-db'
 import { CalculatorSubmission } from '../lib/supabase'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, LabelList } from 'recharts'
 
 // Admin dashboard component
 
@@ -17,7 +18,9 @@ const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'high' | 'medium' | 'low' | 'deleted' | 'favorite'>('all')
   const [activeContactTab, setActiveContactTab] = useState<'all' | 'resolved' | 'deleted'>('all')
-  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects'>('projects')
+  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects' | 'finances'>('projects')
+  const [financePeriodFilter, setFinancePeriodFilter] = useState<'all' | 'half-year' | 'month'>('all')
+  const [allFinances, setAllFinances] = useState<Finance[]>([])
   const [activeProjectFilter, setActiveProjectFilter] = useState<'all' | 'active' | 'completed'>('all')
   const [projects, setProjects] = useState<Project[]>([])
   const [projectPasswordCounts, setProjectPasswordCounts] = useState<{ [key: string]: number }>({})
@@ -117,6 +120,21 @@ const AdminDashboard = () => {
         setContactSubmissions(result.data)
       } else {
         setError(result.error || 'Chyba při načítání kontaktních dat')
+      }
+    } else if (activeSection === 'finances') {
+      const [financesResult, projectsResult] = await Promise.all([
+        getAllFinances(),
+        getProjects()
+      ])
+      
+      if (financesResult.success) {
+        setAllFinances(financesResult.data)
+      } else {
+        setError(financesResult.error || 'Chyba při načítání finančních dat')
+      }
+      
+      if (projectsResult.success) {
+        setProjects(projectsResult.data)
       }
     } else if (activeSection === 'projects') {
       const result = await getProjects()
@@ -1146,6 +1164,21 @@ const AdminDashboard = () => {
               
               <button 
                 onClick={() => {
+                  setActiveSection('finances')
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`text-gray-900 hover:text-primary-500 font-sans transition-colors text-2xl flex items-center gap-3 justify-center ${
+                  activeSection === 'finances' ? 'text-primary-500' : ''
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Výdělky
+              </button>
+              
+              <button 
+                onClick={() => {
                   setActiveSection('calculator')
                   setIsMobileMenuOpen(false)
                 }}
@@ -1223,6 +1256,22 @@ const AdminDashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   Projekty
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setActiveSection('finances')}
+                className={`w-full text-left px-3 py-2 rounded-lg font-sans text-base transition-all duration-200 relative ${
+                  activeSection === 'finances' 
+                    ? 'bg-primary-100 text-primary-700 border-l-4 border-primary-500' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800 hover:border-l-4 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Výdělky
                 </div>
               </button>
             </div>
@@ -1735,6 +1784,358 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {activeSection === 'finances' && (
+            <div className="mb-6">
+              <div className="flex flex-row justify-between items-center md:items-start mb-4 gap-4">
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">Výdělky</h2>
+                  <p className="text-base md:text-lg text-gray-600 font-sans">
+                    Celkové výdělky ze všech projektů
+                  </p>
+                </div>
+                <button
+                  onClick={loadData}
+                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
+                  title="Obnovit data"
+                >
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Filtry období */}
+              <div className="w-full overflow-x-hidden md:overflow-x-visible mb-6">
+                <div className="flex gap-3 overflow-x-auto pb-2 px-4 md:px-0 md:overflow-x-visible scrollbar-hide">
+                  <button
+                    onClick={() => setFinancePeriodFilter('all')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      financePeriodFilter === 'all' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    📅 Celá doba
+                  </button>
+                  
+                  <button
+                    onClick={() => setFinancePeriodFilter('half-year')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      financePeriodFilter === 'half-year' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    📆 Poslední půlrok
+                  </button>
+                  
+                  <button
+                    onClick={() => setFinancePeriodFilter('month')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      financePeriodFilter === 'month' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    📆 Poslední měsíc
+                  </button>
+                </div>
+              </div>
+
+              {/* Hlavní karta s celkovým výdělkem */}
+              {(() => {
+                // Filtrování financí podle období
+                const now = new Date()
+                let filteredFinances = allFinances
+
+                if (financePeriodFilter === 'half-year') {
+                  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+                  filteredFinances = allFinances.filter(f => {
+                    if (!f.created_at) return false
+                    const financeDate = new Date(f.created_at)
+                    return financeDate >= sixMonthsAgo
+                  })
+                } else if (financePeriodFilter === 'month') {
+                  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+                  filteredFinances = allFinances.filter(f => {
+                    if (!f.created_at) return false
+                    const financeDate = new Date(f.created_at)
+                    return financeDate >= oneMonthAgo
+                  })
+                }
+
+                // Výpočet celkového výdělku
+                const totalRevenue = filteredFinances.reduce((sum, f) => sum + (f.amount || 0), 0)
+                const totalHours = filteredFinances.reduce((sum, f) => sum + (f.hours || 0), 0)
+                const recordCount = filteredFinances.length
+                const avgRevenue = recordCount > 0 ? totalRevenue / recordCount : 0
+
+                // Formátování částky
+                const formatCurrency = (amount: number) => {
+                  return new Intl.NumberFormat('cs-CZ', {
+                    style: 'currency',
+                    currency: 'CZK',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(amount)
+                }
+
+                return (
+                  <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-6">
+                    <div className="text-center">
+                      <div className="mb-4">
+                        <h3 className="text-sm md:text-base font-sans font-semibold text-gray-600 mb-2">
+                          Celkový výdělek
+                        </h3>
+                        <div className="text-4xl md:text-5xl font-heading font-bold text-green-600 mb-2">
+                          {formatCurrency(totalRevenue)}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
+                            {recordCount}
+                          </div>
+                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
+                            {getPluralForm(recordCount, 'záznam', 'záznamy', 'záznamů')}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
+                            {formatCurrency(avgRevenue)}
+                          </div>
+                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
+                            Průměrný výdělek
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
+                            {totalHours.toFixed(1)}
+                          </div>
+                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
+                            {getPluralForm(Math.round(totalHours), 'hodina', 'hodiny', 'hodin')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Grafy */}
+              {(() => {
+                // Filtrování financí podle období (stejná logika jako výše)
+                const now = new Date()
+                let filteredFinances = [...allFinances] // Kopie pole
+
+                if (financePeriodFilter === 'half-year') {
+                  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+                  sixMonthsAgo.setHours(0, 0, 0, 0)
+                  filteredFinances = allFinances.filter(f => {
+                    if (!f.created_at) return false
+                    const financeDate = new Date(f.created_at)
+                    financeDate.setHours(0, 0, 0, 0)
+                    return financeDate >= sixMonthsAgo
+                  })
+                } else if (financePeriodFilter === 'month') {
+                  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+                  oneMonthAgo.setHours(0, 0, 0, 0)
+                  filteredFinances = allFinances.filter(f => {
+                    if (!f.created_at) return false
+                    const financeDate = new Date(f.created_at)
+                    financeDate.setHours(0, 0, 0, 0)
+                    return financeDate >= oneMonthAgo
+                  })
+                }
+
+                // Příprava dat pro sloupcový graf - výdělky podle projektu
+                const projectRevenueMap: { [key: string]: number } = {}
+                filteredFinances.forEach(f => {
+                  if (f.project_id && f.amount) {
+                    projectRevenueMap[f.project_id] = (projectRevenueMap[f.project_id] || 0) + f.amount
+                  }
+                })
+
+                const projectChartData = Object.entries(projectRevenueMap)
+                  .map(([projectId, revenue]) => {
+                    const project = projects.find(p => p.id === projectId)
+                    return {
+                      name: project?.display_name || project?.name || 'Neznámý projekt',
+                      revenue: Math.round(revenue)
+                    }
+                  })
+                  .sort((a, b) => b.revenue - a.revenue)
+
+                // Příprava dat pro line graf - celkový výdělek každého projektu
+                // Seskupíme finance podle projektu a sečteme výdělky
+                const projectTotalRevenueMap: { [key: string]: number } = {}
+                filteredFinances.forEach(f => {
+                  if (f.project_id && f.amount) {
+                    const project = projects.find(p => p.id === f.project_id)
+                    const projectName = project?.display_name || project?.name || 'Neznámý projekt'
+                    projectTotalRevenueMap[projectName] = (projectTotalRevenueMap[projectName] || 0) + (f.amount || 0)
+                  }
+                })
+
+                // Vytvoříme data pro line chart - každý projekt je jeden bod s celkovým výdělkem
+                const lineChartData = Object.entries(projectTotalRevenueMap)
+                  .map(([projectName, totalRevenue]) => ({
+                    projectName: projectName,
+                    revenue: Math.round(totalRevenue)
+                  }))
+                  .sort((a, b) => b.revenue - a.revenue) // Seřadit podle výdělku sestupně
+                  .map((item, index) => ({
+                    ...item,
+                    projectIndex: index
+                  }))
+
+                const formatCurrency = (amount: number) => {
+                  return new Intl.NumberFormat('cs-CZ', {
+                    style: 'currency',
+                    currency: 'CZK',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(amount)
+                }
+
+                const CustomTooltip = ({ active, payload, label }: any) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                        <p className="text-sm font-semibold text-gray-800">{label}</p>
+                        <p className="text-sm text-primary-600">
+                          {formatCurrency(payload[0].value)}
+                        </p>
+                      </div>
+                    )
+                  }
+                  return null
+                }
+
+                // Primární modrá barva pro všechny sloupce
+                const primaryBlue = '#3b82f6'
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Pruhový graf - nejvýdělečnější projekty */}
+                    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-100">
+                      <h3 className="text-lg font-heading font-semibold text-gray-800 mb-4">
+                        Nejvýdělečnější projekty
+                      </h3>
+                      {projectChartData.length > 0 ? (
+                        <div className="w-full" style={{ height: '300px' }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart 
+                              data={projectChartData} 
+                              layout="vertical"
+                              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                            >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                            <XAxis 
+                              type="number"
+                              tick={{ fontSize: 11, fill: '#6b7280' }}
+                              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                            />
+                            <YAxis 
+                              type="category"
+                              dataKey="name"
+                              hide={true}
+                            />
+                            <Tooltip 
+                              content={<CustomTooltip />}
+                              cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                            />
+                            <Bar 
+                              dataKey="revenue" 
+                              fill={primaryBlue} 
+                              radius={[0, 6, 6, 0]}
+                              barSize={20}
+                            >
+                              <LabelList 
+                                dataKey="name" 
+                                position="insideLeft"
+                                style={{ fill: '#ffffff', fontSize: '11px', fontWeight: '500', paddingLeft: '8px' }}
+                              />
+                            </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                          Žádná data k zobrazení
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Line graf s body - všechny výdělky podle projektu */}
+                    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-100">
+                      <h3 className="text-lg font-heading font-semibold text-gray-800 mb-4">
+                        Celkový výdělek podle projektu ({lineChartData.length} projektů)
+                      </h3>
+                      {lineChartData.length > 0 ? (
+                        <div className="w-full" style={{ height: '300px' }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart 
+                              data={lineChartData} 
+                              margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                              <XAxis 
+                                type="number"
+                                dataKey="projectIndex"
+                                domain={[0, lineChartData.length - 1]}
+                                hide={true}
+                              />
+                              <YAxis 
+                                type="number"
+                                dataKey="revenue"
+                                tick={{ fontSize: 11, fill: '#6b7280' }}
+                                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                                width={60}
+                              />
+                              <Tooltip 
+                                cursor={{ stroke: primaryBlue, strokeWidth: 2, strokeDasharray: '5 5' }}
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = payload[0].payload
+                                    return (
+                                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                        <p className="text-sm font-semibold text-gray-800 mb-1">
+                                          {data.projectName}
+                                        </p>
+                                        <p className="text-sm text-primary-600 font-semibold mb-1">
+                                          {formatCurrency(data.revenue)}
+                                        </p>
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <Line 
+                                type="monotone"
+                                dataKey="revenue"
+                                stroke={primaryBlue}
+                                strokeWidth={2}
+                                dot={{ fill: primaryBlue, r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 7, fill: primaryBlue }}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                          Žádná data k zobrazení
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
 

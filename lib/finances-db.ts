@@ -42,6 +42,27 @@ export async function getFinancesByProjectId(projectId: string) {
   }
 }
 
+// Funkce pro získání všech finančních záznamů ze všech projektů
+export async function getAllFinances() {
+  try {
+    const { data, error } = await supabase
+      .from('finances')
+      .select('*')
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Chyba při načítání všech finančních záznamů:', error)
+      return { success: false, error: error.message, data: [] }
+    }
+
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('Neočekávaná chyba při načítání všech finančních záznamů:', error)
+    return { success: false, error: 'Neočekávaná chyba při načítání všech finančních záznamů', data: [] }
+  }
+}
+
 // Funkce pro vytvoření nového finančního záznamu
 export async function createFinance(data: FinanceFormData): Promise<{ success: boolean; error?: string; data?: Finance }> {
   try {
