@@ -20,7 +20,7 @@ const Footer = () => {
                 Rezervační systém bez měsíčních poplatků pro barbershopy, masérny a kosmetické salony.
               </p>
               <div className="flex space-x-4">
-                <a href="https://instagram.com/rezit" className="w-6 h-6 bg-gray-600 hover:bg-primary-500 transition-colors duration-300 mask-instagram" target="_blank" rel="noopener noreferrer" style={{
+                <a href="https://instagram.com/rezit.cz" className="w-6 h-6 bg-gray-600 hover:bg-primary-500 transition-colors duration-300 mask-instagram" target="_blank" rel="noopener noreferrer" style={{
                   WebkitMask: 'url(/images/assets/instagram.svg) no-repeat center',
                   mask: 'url(/images/assets/instagram.svg) no-repeat center',
                   WebkitMaskSize: 'contain',
