@@ -65,9 +65,70 @@ const ClientLogos = () => {
     let animationId: number
     let position = 0
     const speed = window.innerWidth <= 768 ? 0.5 : 0.6 // Rychlejší na mobilech i desktopu
+    let singleSetWidth = 0
+    let isCalculating = false
+
+    // Vypočítáme šířku jedné sady log (5 log)
+    const calculateSingleSetWidth = () => {
+      if (!scrollRef.current || isCalculating) return singleSetWidth
+      isCalculating = true
+      
+      let width = 0
+      // Projdeme prvních N log (kde N je počet log v jedné sadě)
+      for (let i = 0; i < clientLogos.length; i++) {
+        const child = scrollRef.current.children[i] as HTMLElement
+        if (child) {
+          const rect = child.getBoundingClientRect()
+          width += rect.width
+        }
+      }
+      
+      isCalculating = false
+      return width
+    }
+
+    // Inicializace šířky - počkáme na načtení obrázků
+    const initWidth = () => {
+      // Počkáme na načtení DOM a obrázků
+      const checkWidth = () => {
+        const calculatedWidth = calculateSingleSetWidth()
+        if (calculatedWidth > 0) {
+          singleSetWidth = calculatedWidth
+        } else {
+          // Pokud ještě není šířka, zkusíme znovu za 50ms
+          setTimeout(checkWidth, 50)
+        }
+      }
+      
+      // Počkáme trochu déle, aby se načetly obrázky
+      setTimeout(checkWidth, 200)
+    }
+    initWidth()
+
+    // Přepočítáme šířku při změně velikosti okna
+    const handleResize = () => {
+      singleSetWidth = calculateSingleSetWidth()
+      // Resetujeme pozici, aby nedošlo k "skoku"
+      if (singleSetWidth > 0) {
+        position = position % singleSetWidth
+      }
+    }
+    window.addEventListener('resize', handleResize)
 
     const animate = () => {
+      // Přepočítáme šířku, pokud ještě není nastavená
+      if (singleSetWidth === 0) {
+        singleSetWidth = calculateSingleSetWidth()
+      }
+      
       position += speed
+      
+      // Pokud jsme projeli jednu sadu, resetujeme pozici
+      // Tím vytvoříme nekonečnou smyčku
+      if (singleSetWidth > 0 && position >= singleSetWidth) {
+        position = position % singleSetWidth
+      }
+      
       if (scrollRef.current) {
         scrollRef.current.style.transform = `translateX(-${position}px)`
       }
@@ -80,8 +141,9 @@ const ClientLogos = () => {
       if (animationId) {
         cancelAnimationFrame(animationId)
       }
+      window.removeEventListener('resize', handleResize)
     }
-  }, [isVisible])
+  }, [isVisible, clientLogos.length])
   return (
     <section id="clients" className="py-24" style={{backgroundColor: '#e0efff'}}>
       {/* Infinite Carousel - Full Width */}
