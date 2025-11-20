@@ -191,20 +191,13 @@ const Header = () => {
                       e.preventDefault();
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="flex items-center relative group"
+                    className="flex items-center"
                   >
-                    <div className="relative inline-block">
-                      <img 
-                        src="/images/rezit2.webp" 
-                        alt="rezit" 
-                        className="h-6 w-auto block transition-opacity duration-300 group-hover:opacity-0"
-                      />
-                      <img 
-                        src="/images/rezit1.webp" 
-                        alt="rezit" 
-                        className="h-6 w-auto absolute top-0 left-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"
-                      />
-                    </div>
+                    <img 
+                      src="/images/rezit2.webp" 
+                      alt="rezit" 
+                      className="h-6 w-auto"
+                    />
                   </a>
                 </div>
                  
