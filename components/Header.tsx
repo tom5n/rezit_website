@@ -279,7 +279,7 @@ const Header = () => {
               {/* Social Links - Bottom */}
               <div className="pb-8 text-center">
                 <div className="flex justify-center space-x-8 text-gray-500 text-sm">
-                  <a href="https://instagram.com/rezit" target="_blank" rel="noopener noreferrer" className="hover:text-primary-500 transition-colors">Instagram</a>
+                  <a href="https://instagram.com/rezit.cz" target="_blank" rel="noopener noreferrer" className="hover:text-primary-500 transition-colors">Instagram</a>
                   <a href="mailto:info@rezit.cz" className="hover:text-primary-500 transition-colors">Email</a>
                 </div>
               </div>
