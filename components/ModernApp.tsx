@@ -362,7 +362,13 @@ const ModernApp = () => {
 
                          {/* CTA */}
                          <div className="flex gap-3 items-center">
-                           <button className="bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold py-2.5 px-5 rounded-full transition-colors duration-300">
+                           <button 
+                             onClick={(e) => { 
+                               e.preventDefault(); 
+                               document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); 
+                             }}
+                             className="bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold py-2.5 px-5 rounded-full transition-colors duration-300"
+                           >
                              Chci vlastní řešení
                            </button>
                            <button 
