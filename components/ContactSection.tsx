@@ -337,7 +337,7 @@ const ContactSection = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Instagram</h4>
-                      <p className="text-gray-600">@rezit</p>
+                      <p className="text-gray-600">@rezit.cz</p>
                     </div>
                   </a>
                 </div>
