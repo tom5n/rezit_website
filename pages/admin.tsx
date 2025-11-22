@@ -6,6 +6,7 @@ import { getProjects, createProject, updateProject, deleteProject, Project, Proj
 import { getTodosByProjectId, createTodo, updateTodo, deleteTodo, countTodosByProjectId, Todo, TodoFormData } from '../lib/todos-db'
 import { getNotesByProjectId, createNote, updateNote, deleteNote, Note, NoteFormData } from '../lib/notes-db'
 import { getFinancesByProjectId, getAllFinances, createFinance, updateFinance, deleteFinance, Finance, FinanceFormData } from '../lib/finances-db'
+import { getFilesByProjectId, uploadFile, deleteFile, getFileUrl, ProjectFile, formatFileSize, getFileIcon } from '../lib/files-db'
 import { CalculatorSubmission } from '../lib/supabase'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, LabelList } from 'recharts'
 
@@ -31,7 +32,8 @@ const AdminDashboard = () => {
   const [projectTodos, setProjectTodos] = useState<Todo[]>([])
   const [projectNotes, setProjectNotes] = useState<Note[]>([])
   const [projectFinances, setProjectFinances] = useState<Finance[]>([])
-  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes' | 'finances'>('todos')
+  const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([])
+  const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes' | 'finances' | 'files'>('todos')
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
   const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -58,6 +60,8 @@ const AdminDashboard = () => {
   const [todoSearchQuery, setTodoSearchQuery] = useState('')
   const [noteSearchQuery, setNoteSearchQuery] = useState('')
   const [financeSearchQuery, setFinanceSearchQuery] = useState('')
+  const [fileSearchQuery, setFileSearchQuery] = useState('')
+  const [isFileUploading, setIsFileUploading] = useState(false)
   const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
     project_id: '',
     service_name: '',
@@ -759,6 +763,14 @@ const AdminDashboard = () => {
     }
   }
 
+  // Funkce pro načtení souborů projektu
+  const loadProjectFiles = async (projectId: string) => {
+    const result = await getFilesByProjectId(projectId)
+    if (result.success) {
+      setProjectFiles(result.data)
+    }
+  }
+
   // Funkce pro otevření detailu projektu
   const openProjectDetail = async (project: Project) => {
     setSelectedProjectDetail(project)
@@ -767,6 +779,7 @@ const AdminDashboard = () => {
       await loadProjectTodos(project.id)
       await loadProjectNotes(project.id)
       await loadProjectFinances(project.id)
+      await loadProjectFiles(project.id)
     }
   }
 
@@ -777,6 +790,7 @@ const AdminDashboard = () => {
     setProjectTodos([])
     setProjectNotes([])
     setProjectFinances([])
+    setProjectFiles([])
   }
 
   // ==================== FUNKCE PRO SPRÁVU POZNÁMEK ====================
@@ -940,6 +954,84 @@ const AdminDashboard = () => {
       }
     } else {
       alert('Chyba při mazání finančního záznamu: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // ==================== FUNKCE PRO SPRÁVU SOUBORŮ ====================
+
+  // Funkce pro nahrání souboru
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !selectedProjectDetail?.id) {
+      return
+    }
+
+    // Kontrola velikosti souboru (max 50MB pro free tier)
+    const maxSize = 50 * 1024 * 1024 // 50MB
+    if (file.size > maxSize) {
+      alert('Soubor je příliš velký. Maximální velikost je 50MB.')
+      return
+    }
+
+    setIsFileUploading(true)
+    try {
+      const result = await uploadFile(
+        file,
+        selectedProjectDetail.id
+      )
+
+      if (result.success) {
+        await loadProjectFiles(selectedProjectDetail.id)
+        // Resetovat input
+        event.target.value = ''
+        alert('Soubor byl úspěšně nahrán!')
+      } else {
+        alert('Chyba při nahrávání souboru: ' + (result.error || 'Neznámá chyba'))
+      }
+    } catch (error: any) {
+      alert('Chyba při nahrávání souboru: ' + (error.message || 'Neznámá chyba'))
+    } finally {
+      setIsFileUploading(false)
+    }
+  }
+
+  // Funkce pro smazání souboru
+  const handleDeleteFile = async (file: ProjectFile) => {
+    if (!confirm('Opravdu chcete smazat tento soubor?')) {
+      return
+    }
+
+    if (!file.id || !file.file_path) {
+      alert('Chyba: Chybí ID nebo cesta k souboru')
+      return
+    }
+
+    const result = await deleteFile(file.id, file.file_path)
+    if (result.success) {
+      if (selectedProjectDetail?.id) {
+        await loadProjectFiles(selectedProjectDetail.id)
+      }
+    } else {
+      alert('Chyba při mazání souboru: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro stažení souboru
+  const handleDownloadFile = async (file: ProjectFile) => {
+    if (!file.file_path) {
+      alert('Chyba: Chybí cesta k souboru')
+      return
+    }
+
+    try {
+      const result = await getFileUrl(file.file_path)
+      if (result.success && result.url) {
+        window.open(result.url, '_blank')
+      } else {
+        alert('Chyba při získávání souboru: ' + (result.error || 'Neznámá chyba'))
+      }
+    } catch (error: any) {
+      alert('Chyba při stahování souboru: ' + (error.message || 'Neznámá chyba'))
     }
   }
 
@@ -2602,6 +2694,7 @@ const AdminDashboard = () => {
                         await loadProjectTodos(selectedProjectDetail.id)
                         await loadProjectNotes(selectedProjectDetail.id)
                         await loadProjectFinances(selectedProjectDetail.id)
+                        await loadProjectFiles(selectedProjectDetail.id)
                       }
                     }}
                     className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
@@ -2655,6 +2748,25 @@ const AdminDashboard = () => {
                       </svg>
                     </button>
                   )}
+                  {activeProjectTab === 'files' && (
+                    <label className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer" title="Nahrát soubor">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        disabled={isFileUploading}
+                      />
+                      {isFileUploading ? (
+                        <svg className="w-5 h-5 md:w-6 md:h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      )}
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -2701,12 +2813,22 @@ const AdminDashboard = () => {
                   >
                     💰 Finance ({projectFinances.length})
                   </button>
+                  <button
+                    onClick={() => setActiveProjectTab('files')}
+                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                      activeProjectTab === 'files' 
+                        ? 'bg-primary-500 text-white border-primary-500' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    📁 Soubory ({projectFiles.length})
+                  </button>
                   
                   {/* Searchbar */}
                   <div className="relative ml-auto flex-shrink-0">
                     <input
                       type="text"
-                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : todoSearchQuery}
+                      value={activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : activeProjectTab === 'files' ? fileSearchQuery : todoSearchQuery}
                       onChange={(e) => {
                         if (activeProjectTab === 'passwords') {
                           setPasswordSearchQuery(e.target.value)
@@ -2714,11 +2836,13 @@ const AdminDashboard = () => {
                           setNoteSearchQuery(e.target.value)
                         } else if (activeProjectTab === 'finances') {
                           setFinanceSearchQuery(e.target.value)
+                        } else if (activeProjectTab === 'files') {
+                          setFileSearchQuery(e.target.value)
                         } else {
                           setTodoSearchQuery(e.target.value)
                         }
                       }}
-                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : activeProjectTab === 'notes' ? 'Vyhledat poznámku...' : activeProjectTab === 'finances' ? 'Vyhledat finanční záznam...' : 'Vyhledat úkol...'}
+                      placeholder={activeProjectTab === 'passwords' ? 'Vyhledat heslo...' : activeProjectTab === 'notes' ? 'Vyhledat poznámku...' : activeProjectTab === 'finances' ? 'Vyhledat finanční záznam...' : activeProjectTab === 'files' ? 'Vyhledat soubor...' : 'Vyhledat úkol...'}
                       className="px-4 py-3 pl-11 pr-10 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans text-sm w-64"
                     />
                     <svg 
@@ -2729,7 +2853,7 @@ const AdminDashboard = () => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : todoSearchQuery) && (
+                    {(activeProjectTab === 'passwords' ? passwordSearchQuery : activeProjectTab === 'notes' ? noteSearchQuery : activeProjectTab === 'finances' ? financeSearchQuery : activeProjectTab === 'files' ? fileSearchQuery : todoSearchQuery) && (
                       <button
                         onClick={() => {
                           if (activeProjectTab === 'passwords') {
@@ -2738,6 +2862,8 @@ const AdminDashboard = () => {
                             setNoteSearchQuery('')
                           } else if (activeProjectTab === 'finances') {
                             setFinanceSearchQuery('')
+                          } else if (activeProjectTab === 'files') {
+                            setFileSearchQuery('')
                           } else {
                             setTodoSearchQuery('')
                           }
@@ -3434,6 +3560,96 @@ const AdminDashboard = () => {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {activeProjectTab === 'files' && (
+                <div>
+
+                  {(() => {
+                    // Filtrování souborů podle search query
+                    const filteredFiles = fileSearchQuery
+                      ? projectFiles.filter(f => 
+                          f.file_name.toLowerCase().includes(fileSearchQuery.toLowerCase()) ||
+                          (f.description && f.description.toLowerCase().includes(fileSearchQuery.toLowerCase())) ||
+                          (f.category && f.category.toLowerCase().includes(fileSearchQuery.toLowerCase()))
+                        )
+                      : projectFiles
+
+                    if (filteredFiles.length === 0) {
+                      return (
+                        <div className="text-center py-12 bg-white rounded-lg shadow">
+                          <p className="text-gray-500">
+                            {fileSearchQuery ? 'Žádné soubory neodpovídají vyhledávání' : 'Žádné soubory pro tento projekt'}
+                          </p>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="space-y-3">
+                        {filteredFiles.map((file) => (
+                          <div
+                            key={file.id || 'unknown'}
+                            className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden p-4 border-l-4 border-primary-500"
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Obsah */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-2xl">{getFileIcon(file.file_type, file.file_extension)}</span>
+                                  <p className="text-base font-sans font-semibold text-gray-800 truncate">
+                                    {file.file_name}
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                                  <span className="font-sans">{formatFileSize(file.file_size)}</span>
+                                  {file.file_type && (
+                                    <span className="font-sans">{file.file_type}</span>
+                                  )}
+                                  {file.category && (
+                                    <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-sans">
+                                      {file.category}
+                                    </span>
+                                  )}
+                                  {file.created_at && (
+                                    <span className="font-sans">{formatDate(file.created_at)}</span>
+                                  )}
+                                </div>
+                                {file.description && (
+                                  <p className="text-sm text-gray-700 font-sans mt-2 whitespace-pre-wrap">
+                                    {file.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                  title="Stáhnout soubor"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteFile(file)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                  title="Smazat soubor"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )
                   })()}
