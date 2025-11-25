@@ -78,7 +78,6 @@ export default function Cookies() {
               </p>
               <div className="space-y-2 text-gray-600 mb-8">
                 <p><strong>Email:</strong> info@rezit.cz</p>
-                <p><strong>Telefon:</strong> +420 123 456 789</p>
               </div>
 
               <div className="text-center mt-12">

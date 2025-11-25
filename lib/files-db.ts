@@ -184,15 +184,54 @@ export async function getFileUrl(
   expiresIn: number = 3600
 ): Promise<{ success: boolean; error?: string; url?: string }> {
   try {
+    console.log('Získávání URL pro soubor:', { filePath, bucketName })
+    
+    // Zkusit získat signed URL
     const { data, error } = await supabase.storage
       .from(bucketName)
       .createSignedUrl(filePath, expiresIn)
 
     if (error) {
-      console.error('Chyba při získávání URL souboru:', error)
-      return { success: false, error: error.message }
+      console.error('Chyba při získávání signed URL:', error)
+      console.error('Detail chyby:', JSON.stringify(error, null, 2))
+      
+      const errorMessage = error.message || error.toString()
+      
+      // Pokud je chyba "Object not found", zkusit zkontrolovat, jestli soubor existuje
+      if (errorMessage.includes('not found') || errorMessage.includes('Object not found') || errorMessage.includes('does not exist')) {
+        // Zkusit zkontrolovat, jestli soubor existuje
+        const { data: files, error: listError } = await supabase.storage
+          .from(bucketName)
+          .list(filePath.split('/').slice(0, -1).join('/'))
+        
+        if (listError) {
+          console.error('Chyba při listování souborů:', listError)
+        } else {
+          console.log('Soubory v adresáři:', files)
+        }
+        
+        return { 
+          success: false, 
+          error: `Soubor nebyl nalezen na cestě: ${filePath}\n\nMožné příčiny:\n1. Soubor byl smazán ze Storage\n2. Cesta k souboru je nesprávná\n3. Chybí oprávnění pro čtení (zkontrolujte Storage Policies)\n\nZkuste zkontrolovat v Supabase Dashboard → Storage → project-files, jestli soubor existuje.` 
+        }
+      }
+      
+      // RLS policy chyba
+      if (errorMessage.includes('row-level security') || errorMessage.includes('RLS') || errorMessage.includes('policy') || errorMessage.includes('permission denied')) {
+        return { 
+          success: false, 
+          error: `Chyba oprávnění (RLS Policy)!\n\nBucket "${bucketName}" existuje, ale nemáte oprávnění ke čtení souborů.\n\n📋 Řešení:\n1. V Supabase Dashboard → Storage → Policies\n2. Zkontrolujte, že máte policy pro SELECT:\n\nCREATE POLICY "Allow read from project-files"\nON storage.objects FOR SELECT\nTO anon\nUSING (bucket_id = 'project-files');\n\n📖 Více v create-storage-policies.sql` 
+        }
+      }
+      
+      return { success: false, error: errorMessage }
     }
 
+    if (!data || !data.signedUrl) {
+      return { success: false, error: 'Nepodařilo se získat URL souboru' }
+    }
+
+    console.log('Signed URL úspěšně vytvořena')
     return { success: true, url: data.signedUrl }
   } catch (error: any) {
     console.error('Neočekávaná chyba při získávání URL souboru:', error)
