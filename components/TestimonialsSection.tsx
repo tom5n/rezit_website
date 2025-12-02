@@ -46,6 +46,14 @@ const TestimonialsSection = () => {
       quote: "Skvělá práce! Rezervační systém, který mi vytvořili, je moderní, přehledný a přesně podle mého stylu. Navíc mi ušetřili spoustu času i peněz, protože všechno běží automaticky a zákazníci si mohou rezervace vytvářet sami. Doporučuju všemi deseti!",
       avatar: "/images/testimonials/nastrizeno.jpg",
       logo: "/images/clients/nastrizenobarber.png"
+    },
+    {
+      id: 5,
+      name: "Adéla",
+      business: "AVA Barber",
+      quote: "Služba byla na velmi vysoké úrovni vše proběhlo rychle, profesionálně a bez jakýchkoli komplikací. Oceňuji především šikovnost a ochotu, se kterou byla každá moje prosba okamžitě vyřešena. Skvělá zkušenost, kterou mohu s klidným svědomím doporučit.",
+      avatar: "/images/testimonials/avabarber.png",
+      logo: "/images/clients/avabarber.png"
     }
   ]
 
