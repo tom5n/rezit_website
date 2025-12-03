@@ -499,10 +499,13 @@ const Calculator = () => {
                      {/* Návratnost */}
                      <div className="flex items-center justify-between py-4">
                        <div>
-                         <p className="text-sm text-gray-600 mb-1">Návratnost investice</p>
+                         <p className="text-sm font-medium text-gray-700 mb-1">Návratnost investice</p>
                          <div className="text-2xl font-bold text-gray-900">
                            {results.paybackMonths} měsíců
                          </div>
+                         <p className="text-xs text-gray-500 mt-1">
+                           Vaše investice se vám vrátí za {results.paybackMonths} {results.paybackMonths === 1 ? 'měsíc' : results.paybackMonths < 5 ? 'měsíce' : 'měsíců'}, pak už nic neplatíte
+                         </p>
                        </div>
                        <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
                          <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,10 +522,13 @@ const Calculator = () => {
                        <>
                          <div className="flex items-center justify-between py-4">
                            <div>
-                             <p className="text-sm text-gray-600 mb-1">Roční úspora</p>
+                             <p className="text-sm font-medium text-gray-700 mb-1">Roční úspora</p>
                              <div className="text-2xl font-bold text-gray-900">
                                {Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč
                              </div>
+                             <p className="text-xs text-gray-500 mt-1">
+                               Oproti měsíčním poplatkům ušetříte {Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč ročně
+                             </p>
                            </div>
                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,19 +542,25 @@ const Calculator = () => {
 
                      {/* Úspora za 5 let - pouze pokud je pozitivní */}
                      {results.showFiveYearSavings && (
-                       <div className="flex items-center justify-between py-4">
-                         <div>
-                           <p className="text-sm text-gray-600 mb-1">Úspora za 5 let</p>
-                           <div className="text-2xl font-bold text-gray-900">
-                             {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč
+                       <>
+                         <div className="flex items-center justify-between py-4">
+                           <div>
+                             <p className="text-sm font-medium text-gray-700 mb-1">Úspora za 5 let</p>
+                             <div className="text-2xl font-bold text-gray-900">
+                               {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč
+                             </div>
+                             <p className="text-xs text-gray-500 mt-1">
+                               Za 5 let ušetříte {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč oproti měsíčním poplatkům
+                             </p>
+                           </div>
+                           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                             </svg>
                            </div>
                          </div>
-                         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                           <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                           </svg>
-                         </div>
-                       </div>
+                         <div className="border-t border-gray-200"></div>
+                       </>
                      )}
                    </div>
 
@@ -559,16 +571,49 @@ const Calculator = () => {
                      </div>
                    )}
 
+                   {/* Srovnání s konkurencí */}
+                   <div className="pt-4">
+                     <div className="space-y-2 text-sm text-gray-600">
+                       <p className="flex items-center gap-2">
+                         <span className="text-gray-400">•</span>
+                         <span>S konkurencí byste zaplatili: <span className="font-semibold text-gray-800">{Math.round(results.annualCompetitorCosts).toLocaleString('cs-CZ')} Kč</span> ročně</span>
+                       </p>
+                       <p className="flex items-center gap-2">
+                         <span className="text-gray-400">•</span>
+                         <span>S námi zaplatíte: <span className="font-semibold text-gray-800">{Math.round(results.rezitPrice).toLocaleString('cs-CZ')} Kč</span> jednorázově</span>
+                       </p>
+                       {results.showSavings && (
+                         <p className="flex items-center gap-2">
+                           <span className="text-gray-400">•</span>
+                           <span>Úspora: <span className="font-semibold text-gray-800">{Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč</span> ročně</span>
+                         </p>
+                       )}
+                     </div>
+                   </div>
+
                    {/* CTA */}
                    <div className="pt-4">
+                     {/* Sekundární tlačítka */}
+                     <div className="flex items-center gap-3 mb-4 w-full">
+                       <a 
+                         href="#showcase" 
+                         className="flex-1 btn-secondary text-center text-sm py-2"
+                       >
+                         Prohlédnout portfolio
+                       </a>
+                       <a 
+                         href="#process" 
+                         className="flex-1 btn-secondary text-center text-sm py-2"
+                       >
+                         Jak to funguje?
+                       </a>
+                     </div>
+                     
                      <a 
                        href="#contact" 
-                       className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-800 font-heading font-semibold py-2.5 px-5 rounded-full border border-gray-300 hover:border-primary-500 transition-all duration-300"
+                       className="w-full inline-flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-heading font-semibold text-lg py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
                      >
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                       </svg>
-                       Kontaktujte nás
+                       Chci zjistit víc
                      </a>
                    </div>
                  </div>
