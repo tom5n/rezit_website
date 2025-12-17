@@ -6,6 +6,7 @@ import SectionSeparator from '@/components/SectionSeparator'
 import ClientLogos from '@/components/ClientLogos'
 import WhyChooseUs from '@/components/WhyChooseUs'
 import ProcessSteps from '@/components/ProcessSteps'
+import ConfiguratorSection from '@/components/ConfiguratorSection'
 import ModernApp from '@/components/ModernApp'
 import Calculator from '@/components/Calculator'
 import PricingSection from '@/components/PricingSection'
@@ -148,6 +149,7 @@ export default function Home() {
       <WhyChooseUs />
       <TestimonialsSection />
       <ProcessSteps />
+      <ConfiguratorSection />
       <ModernApp />
       <SectionSeparator src="/images/assets/3.svg" />
       <Calculator />

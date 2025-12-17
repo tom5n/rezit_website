@@ -101,13 +101,17 @@ const Header = () => {
                 <div className="h-6 w-px bg-gray-300 ml-6"></div>
 
                 {/* Navigation - hned za logem */}
-                <nav className="flex space-x-4 ml-6">
+                <nav className="flex space-x-6 ml-6">
                   <a href="#features" className="text-gray-900 hover:text-primary-500 font-sans transition-colors relative group text-base" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>
                     Funkce
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span>
                   </a>
                   <a href="#process" className="text-gray-900 hover:text-primary-500 font-sans transition-colors relative group text-base" onClick={(e) => { e.preventDefault(); document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' }); }}>
                     Jak to funguje
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span>
+                  </a>
+                  <a href="#configurator" className="text-gray-900 hover:text-primary-500 font-sans transition-colors relative group text-base" onClick={(e) => { e.preventDefault(); document.getElementById('configurator')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                    Konfigurátor
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span>
                   </a>
                   <a href="#showcase" className="text-gray-900 hover:text-primary-500 font-sans transition-colors relative group text-base" onClick={(e) => { e.preventDefault(); document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' }); }}>
@@ -237,6 +241,13 @@ const Header = () => {
                     onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); setIsMobileMenuOpen(false); }}
                   >
                     Funkce
+                  </a>
+                  <a 
+                    href="#configurator" 
+                    className="text-gray-900 hover:text-primary-500 font-sans transition-colors text-2xl relative"
+                    onClick={(e) => { e.preventDefault(); document.getElementById('configurator')?.scrollIntoView({ behavior: 'smooth' }); setIsMobileMenuOpen(false); }}
+                  >
+                    Konfigurátor
                   </a>
                   <a 
                     href="#showcase" 
