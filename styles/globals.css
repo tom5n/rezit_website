@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    /* iOS Safari optimalizace */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply text-gray-800 bg-background-cool font-sans;
+    overflow-x: hidden;
+    /* iOS Safari optimalizace */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+  
+  /* Optimalizace pro iOS Safari */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Zlepšení výkonu animací */
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-fade-in-up,
+  .animate-bounce-in,
+  .animate-quick-popup {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Předběžné skrytí elementů před animací */
+  .opacity-0 {
+    opacity: 0 !important;
+  }
+  
+  .translate-y-8 {
+    transform: translateY(32px) !important;
+  }
+  
+  .translate-x-8 {
+    transform: translateX(32px) !important;
+  }
+  
+  .-translate-x-8 {
+    transform: translateX(-32px) !important;
+  }
+  
+  .scale-30 {
+    transform: scale(0.3) !important;
+  }
+
+  /* Lepší kontrola animací - kombinované transformace */
+  .pre-animate-hidden {
+    opacity: 0 !important;
+    transform: translateY(32px) !important;
+    transition: all 0.6s ease-out !important;
+  }
+  
+  .pre-animate-hidden-left {
+    opacity: 0 !important;
+    transform: translateX(-32px) !important;
+    transition: all 0.6s ease-out !important;
+  }
+  
+  .pre-animate-hidden-right {
+    opacity: 0 !important;
+    transform: translateX(32px) !important;
+    transition: all 0.6s ease-out !important;
+  }
+  
+  .pre-animate-hidden-scale {
+    opacity: 0 !important;
+    transform: scale(0.3) translateY(20px) !important;
+    transition: all 0.6s ease-out !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold py-3 px-6 rounded-full transition-all duration-300 hover:scale-105;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-100 text-gray-800 font-heading font-semibold py-3 px-6 rounded-full border border-gray-300 hover:border-primary-500 transition-all duration-300 hover:scale-105;
+  }
+  
+  .section-padding {
+    @apply py-24 px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-max {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Skrytí scrollbaru při zachování scrollování */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE a Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari a Opera */
+  }
+
+  /* Animace pro ProcessSteps */
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes quick-popup {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateY(20px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* iOS Safari optimalizace - přidání will-change pro lepší výkon */
+  .animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out forwards;
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.6s ease-out forwards;
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in 0.6s ease-out forwards;
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+  }
+  
+  .animate-quick-popup {
+    animation: quick-popup 0.5s ease-out forwards;
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+  }
+
+  /* Mobilní optimalizace - úplně vypnout reveal animace na mobilních zařízeních */
+  @media (max-width: 768px) {
+    /* Vypnout všechny reveal animace na mobilu - JavaScript zajistí, že prvky jsou viditelné */
+    .animate-slide-in-left,
+    .animate-slide-in-right,
+    .animate-fade-in-up,
+    .animate-bounce-in,
+    .animate-quick-popup {
+      animation: none !important;
+    }
+    
+    /* Zajistit, že pre-animate-hidden prvky jsou viditelné na mobilu (jako fallback) */
+    .pre-animate-hidden,
+    .pre-animate-hidden-left,
+    .pre-animate-hidden-right,
+    .pre-animate-hidden-scale {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* iOS Safari specifické opravy */
+  @supports (-webkit-touch-callout: none) {
+    .animate-slide-in-left,
+    .animate-slide-in-right,
+    .animate-fade-in-up,
+    .animate-bounce-in,
+    .animate-quick-popup {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-perspective: 1000px;
+      perspective: 1000px;
+    }
+  }
+
+  /* Fallback pro starší iOS verze */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .animate-slide-in-left,
+    .animate-slide-in-right,
+    .animate-fade-in-up,
+    .animate-bounce-in,
+    .animate-quick-popup {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* Optimalizace pro starší Safari */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) and (max-width: 768px) {
+    .animate-slide-in-left,
+    .animate-slide-in-right,
+    .animate-fade-in-up,
+    .animate-bounce-in,
+    .animate-quick-popup {
+      animation-duration: 0.3s !important;
+    }
+  }
+}
