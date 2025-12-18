@@ -16,7 +16,7 @@ const SEO: React.FC<SEOProps> = ({
   title = 'rezit - Rezervační systém bez měsíčních poplatků | Kadeřnictví, Salony, Barber',
   description = 'Rezervační systém na míru pro kadeřnictví, salony a barber shopy. Bez měsíčních poplatků, jednorázová investice. Online rezervace, správa klientů, kalendář služeb. Ušetřete tisíce ročně.',
   keywords = 'rezervační systém, kadeřnictví, salon, barber shop, online rezervace, rezervační systém bez poplatků, rezervační systém na míru, booking systém, rezervace služeb, správa klientů, kalendář služeb, rezervační systém pro salony, rezervační systém pro kadeřnictví, rezervační systém pro barber',
-  image = 'https://rezit.cz/images/heroimg_rezit.webp',
+  image = 'https://rezit.cz/images/rezitOGimage.png',
   url,
   type = 'website',
   noindex = false,
