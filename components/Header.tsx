@@ -11,7 +11,8 @@ const Header = () => {
   // Detekce, jestli jsme na cookies nebo ochrana údajů stránce
   const isCookiesPage = router.pathname === '/cookies'
   const isOchranaUdajuPage = router.pathname === '/ochrana-udaju'
-  const isSimpleHeaderPage = isCookiesPage || isOchranaUdajuPage
+  const isSplatkyPage = router.pathname === '/splatky'
+  const isSimpleHeaderPage = isCookiesPage || isOchranaUdajuPage || isSplatkyPage
 
   useEffect(() => {
     const handleScroll = () => {
