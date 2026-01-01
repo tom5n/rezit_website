@@ -140,7 +140,7 @@ const Footer = () => {
           <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-500 text-sm font-sans flex items-center">
-                © 2025 <a href="https://rezit.cz" className="text-gray-500 hover:text-primary-500 transition-colors relative group ml-1 font-semibold inline-block" target="_blank" rel="noopener noreferrer">rezit<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span></a>
+                © 2026 <a href="https://rezit.cz" className="text-gray-500 hover:text-primary-500 transition-colors relative group ml-1 font-semibold inline-block" target="_blank" rel="noopener noreferrer">rezit<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span></a>
                 <span className="h-4 w-px bg-gray-300 mx-2"></span>
                 Všechna práva vyhrazena.
               </p>
