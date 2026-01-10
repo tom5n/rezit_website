@@ -120,16 +120,16 @@ const FAQSection = () => {
   }, [hasAnimated, baseDelay, threshold, rootMargin, supportsIntersectionObserver, isMobile])
 
   return (
-    <section id="faq" className="section-padding bg-white">
+    <section id="faq" className="section-padding bg-white dark:bg-[#1f1f23]">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 ${
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 ${
             animations.title ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Často kladené <span className="text-primary-500">otázky</span> (FAQ)
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${
+          <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed ${
             animations.subtitle ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Najděte odpovědi na nejčastější otázky o systémech <span className="font-semibold">rezit</span>.
@@ -142,16 +142,16 @@ const FAQSection = () => {
         }`}>
           <div className="space-y-6">
             {(showAll ? faqs : faqs.slice(0, 3)).map((faq, index) => (
-              <div key={faq.id} className="border-b border-gray-200 pb-4">
+              <div key={faq.id} className="border-b border-gray-200 dark:border-white/20 pb-4">
                 <button
                   onClick={() => toggleFAQ(index)}
-                  className="w-full py-4 transition-all duration-200 flex items-center justify-between hover:text-primary-600 group"
+                  className="w-full py-4 transition-all duration-200 flex items-center justify-between hover:text-primary-600 dark:hover:text-primary-400 group"
                 >
-                  <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 pr-4 text-left">
+                  <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 dark:text-white pr-4 text-left">
                     {faq.question}
                   </h3>
                   <svg 
-                    className={`w-5 h-5 text-gray-500 transition-all duration-200 group-hover:scale-125 group-hover:text-primary-500 ${
+                    className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-all duration-200 group-hover:scale-125 group-hover:text-primary-500 dark:group-hover:text-primary-400 ${
                       openIndex === index ? 'rotate-180' : ''
                     }`}
                     fill="none" 
@@ -167,7 +167,7 @@ const FAQSection = () => {
                   openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                 }`}>
                   <div className="pb-4">
-                    <p className="text-gray-600 leading-relaxed text-sm">
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                       {faq.answer}
                     </p>
                   </div>
@@ -183,9 +183,9 @@ const FAQSection = () => {
             }`}>
               <button
                 onClick={() => setShowAll(true)}
-                className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200 mx-auto"
+                className="w-12 h-12 bg-gray-100 dark:bg-white/10 dark:backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/20 transition-colors duration-200 mx-auto"
               >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </button>

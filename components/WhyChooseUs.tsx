@@ -133,16 +133,16 @@ const WhyChooseUs = () => {
   ]
 
   return (
-    <section id="features" className="section-padding bg-white">
+    <section id="features" className="section-padding bg-white dark:bg-[#1f1f23]">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-20">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 transition-all duration-500 ${
             animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Proč je <span className="text-primary-500">rezit</span> lepší než ostatní?
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
+          <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
             animations.subtitle ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Na rozdíl od jiných rezervačních systémů platíte jen jednou – a systém je Váš. 
@@ -166,18 +166,18 @@ const WhyChooseUs = () => {
             return (
             <div
               key={benefit.id}
-              className={`bg-white rounded-xl border border-primary-100 p-6 hover:shadow-xl hover:border-primary-200 hover:bg-primary-50/30 transition-all duration-500 ${animationClass}`}
+              className={`bg-white dark:bg-white/10 dark:backdrop-blur-sm rounded-xl border border-primary-100 dark:border-white/20 p-6 hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-500 hover:bg-primary-50/30 dark:hover:bg-white/20 transition-all duration-500 ${animationClass}`}
             >
               {/* Ikona */}
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mb-6 text-primary-600">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 dark:bg-gray-200 dark:from-gray-200 dark:to-gray-300 rounded-xl flex items-center justify-center mb-6 text-primary-600 dark:text-gray-800">
                 {benefit.icon}
               </div>
               
               {/* Obsah */}
-              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 mb-4">
+              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 dark:text-white mb-4">
                 {benefit.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 {benefit.description}
               </p>
             </div>
@@ -198,18 +198,18 @@ const WhyChooseUs = () => {
             return (
             <div
               key={benefit.id}
-              className={`bg-white rounded-xl border border-primary-100 p-6 hover:shadow-xl hover:border-primary-200 hover:bg-primary-50/30 transition-all duration-500 ${animationClass}`}
+              className={`bg-white dark:bg-white/10 dark:backdrop-blur-sm rounded-xl border border-primary-100 dark:border-white/20 p-6 hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-500 hover:bg-primary-50/30 dark:hover:bg-white/20 transition-all duration-500 ${animationClass}`}
             >
               {/* Ikona */}
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mb-6 text-primary-600">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 dark:bg-gray-200 dark:from-gray-200 dark:to-gray-300 rounded-xl flex items-center justify-center mb-6 text-primary-600 dark:text-gray-800">
                 {benefit.icon}
               </div>
               
               {/* Obsah */}
-              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 mb-4">
+              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 dark:text-white mb-4">
                 {benefit.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 {benefit.description}
               </p>
             </div>

@@ -15,7 +15,7 @@
   }
   
   body {
-    @apply text-gray-800 bg-background-cool font-sans;
+    @apply text-gray-800 dark:text-gray-100 bg-background-cool dark:bg-[#1f1f23] font-sans;
     overflow-x: hidden;
     /* iOS Safari optimalizace */
     -webkit-font-smoothing: antialiased;
@@ -94,7 +94,7 @@
   }
   
   .btn-secondary {
-    @apply bg-white hover:bg-gray-100 text-gray-800 font-heading font-semibold py-3 px-6 rounded-full border border-gray-300 hover:border-primary-500 transition-all duration-300 hover:scale-105;
+    @apply bg-white hover:bg-gray-100 dark:bg-white/10 dark:backdrop-blur-sm dark:hover:bg-white/20 text-gray-800 dark:text-gray-100 font-heading font-semibold py-3 px-6 rounded-full border border-gray-300 dark:border-white/20 hover:border-primary-500 transition-all duration-300 hover:scale-105;
   }
   
   .section-padding {

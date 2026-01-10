@@ -15,6 +15,25 @@ const HeroSection = () => {
     button2: false
   })
   const [imageEnlarged, setImageEnlarged] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    // Kontrola dark mode při mount
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    }
+    
+    checkDarkMode()
+
+    // Sledování změn dark mode
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     // Na mobilních zařízeních animace vůbec nespouštíme
@@ -52,16 +71,13 @@ const HeroSection = () => {
   }, [baseDelay, isMobile])
   return (
     <section id="home" className="min-h-[80vh] flex items-center relative overflow-hidden pt-16 md:pt-0">
-      {/* Gradient background with circular effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-white">
-        <div className="absolute top-1/4 -right-1/4 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] lg:w-[500px] lg:h-[500px] bg-primary-200 rounded-full opacity-30 blur-3xl"></div>
-        <div className="absolute bottom-1/4 -left-1/4 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] lg:w-[400px] lg:h-[400px] bg-primary-100 rounded-full opacity-25 blur-3xl"></div>
-      </div>
+      {/* Solid background */}
+      <div className="absolute inset-0 bg-white dark:bg-[#1f1f23]"></div>
       <div className="container-max relative z-10 py-8 sm:py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Text content */}
           <div className="text-center lg:text-left px-6 sm:px-8 md:px-0">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 leading-tight mb-6 sm:mb-8 text-left">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white leading-tight mb-6 sm:mb-8 text-left">
               <span className={`inline-block whitespace-nowrap transition-all duration-1000 ${
                 animations.title1 ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
               }`}>
@@ -75,7 +91,7 @@ const HeroSection = () => {
               </span>
             </h1>
             
-            <p className={`text-lg sm:text-xl text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-0 font-sans leading-relaxed text-left transition-all duration-1000 ${
+            <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-0 font-sans leading-relaxed text-left transition-all duration-1000 ${
               animations.description ? 'animate-slide-in-left' : 'pre-animate-hidden-left'
             }`}>
               Ušetřete tisíce ročně a mějte řešení šité na míru Vašemu podnikání.
@@ -106,7 +122,7 @@ const HeroSection = () => {
             </div>
 
             {/* Trust indicators */}
-            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap items-center justify-center lg:justify-start gap-2 sm:gap-4 lg:gap-8 text-xs sm:text-base text-gray-500">
+            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap items-center justify-center lg:justify-start gap-2 sm:gap-4 lg:gap-8 text-xs sm:text-base text-gray-500 dark:text-gray-400">
               <div className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap transition-all duration-600 ${
                 animations.trust1 ? 'animate-bounce-in' : 'pre-animate-hidden-scale'
               }`}>
@@ -145,7 +161,7 @@ const HeroSection = () => {
             animations.image ? 'animate-slide-in-right' : 'pre-animate-hidden-right'
           }`}>
             <img 
-              src="/images/heroimg_rezit.webp" 
+              src={isDarkMode ? "/images/rezitheroimgdark.webp" : "/images/testheroimg.webp"} 
               alt="rezit - Rezervační systém pro kadeřnictví, salony a barber shopy bez měsíčních poplatků" 
               className={`w-full h-auto mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl transition-transform duration-1000 ${
                 imageEnlarged ? 'scale-105' : 'scale-100'

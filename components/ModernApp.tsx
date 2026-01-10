@@ -19,6 +19,20 @@ const ModernApp = () => {
   const [isModalAnimating, setIsModalAnimating] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    }
+    checkDarkMode()
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+    return () => observer.disconnect()
+  }, [])
 
   const systems = [
     {
@@ -91,16 +105,19 @@ const ModernApp = () => {
       id: 5,
       title: "Mentoring platforma",
       client: "Ivana Jiráková",
-      description: "Kompletní systém pro správu rezervací mentoringu a správa novinek na webu.",
+      description: "Kompletní webové stránky a rezervační systém na míru pro koučink a mentoring. Vytvořili jsme moderní web s rezervačním systémem, správou novinek a událostí.",
       image: "/images/portfolio/jirakova_port.png",
       images: [
         "/images/portfolio/jirakova_port.png",
-        "/images/screenshots/jirakova/jirakovarezervace.webp",
-        "/images/screenshots/jirakova/jirakovanovinky.webp",
-        "/images/screenshots/jirakova/jirakovadashboard.webp",
-        "/images/screenshots/jirakova/jirakovakeschvaleni.webp"
+        "/images/screenshots/jirakova/1.webp",
+        "/images/screenshots/jirakova/2.webp",
+        "/images/screenshots/jirakova/3.webp",
+        "/images/screenshots/jirakova/4.webp",
+        "/images/screenshots/jirakova/5.webp",
+        "/images/screenshots/jirakova/6.webp",
+        "/images/screenshots/jirakova/7.webp"
       ],
-      features: ["Rezervace mentoringu", "Správa novinek", "Správa událostí"]
+      features: ["Webové stránky", "Rezervační systém na míru", "Správa novinek", "Správa událostí"]
     }
   ]
 
@@ -242,16 +259,16 @@ const ModernApp = () => {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isModalOpen])
   return (
-    <section id="showcase" className="section-padding bg-white">
+    <section id="showcase" className="section-padding bg-white dark:bg-[#1f1f23]">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 transition-all duration-500 ${
             animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Naše <span className="text-primary-500">hotové systémy</span> v praxi
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
+          <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
             animations.subtitle ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Podívejte se na skutečné rezervační systémy, které jsme vytvořili pro naše klienty.
@@ -270,16 +287,9 @@ const ModernApp = () => {
              onTouchEnd={handleTouchEnd}
            >
            {/* Main showcase */}
-           <div className={`relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg transition-all duration-300 ${
-             isHovered ? 'border-primary-300 shadow-xl' : ''
+           <div className={`relative overflow-hidden rounded-2xl bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-200 dark:border-white/20 shadow-lg transition-all duration-300 ${
+             isHovered ? 'shadow-xl' : ''
            }`}>
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 via-transparent to-transparent"></div>
-            
-            {/* Hover fade overlay */}
-            <div className={`absolute inset-0 bg-primary-500/5 transition-opacity duration-300 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}></div>
             
             <div className="relative overflow-hidden">
               <div 
@@ -304,8 +314,8 @@ const ModernApp = () => {
                         />
                          {/* Hover overlay */}
                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                             <div className="flex items-center gap-2 text-gray-800 font-medium">
+                           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                             <div className="flex items-center gap-2 text-gray-800 dark:text-gray-100 font-medium">
                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                </svg>
@@ -318,9 +328,9 @@ const ModernApp = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                       {/* Zabookuj badge */}
                       <div className="absolute top-6 right-6 pointer-events-none">
-                        <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-white/20">
+                        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-white/20 dark:border-gray-700/20">
                           <img 
-                            src="/images/rezit2.webp" 
+                            src={isDarkMode ? "/images/rezitlogodark.webp" : "/images/rezit2.webp"} 
                             alt="rezit" 
                             className="h-4 w-auto"
                           />
@@ -329,20 +339,20 @@ const ModernApp = () => {
                     </div>
 
                      {/* Content */}
-                     <div className="order-2 lg:order-2 p-6 lg:p-12 flex flex-col justify-center bg-white">
+                     <div className="order-2 lg:order-2 p-6 lg:p-12 flex flex-col justify-center">
                        <div className="max-w-md">
                          {/* Client */}
-                         <div className="text-primary-600 text-sm font-semibold uppercase tracking-wide mb-6">
+                         <div className="text-primary-600 dark:text-primary-400 text-sm font-semibold uppercase tracking-wide mb-6">
                            {system.client}
                          </div>
 
                          {/* Title */}
-                         <h3 className="text-2xl lg:text-4xl font-heading font-bold text-gray-900 mb-4 lg:mb-6 leading-tight">
+                         <h3 className="text-2xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-4 lg:mb-6 leading-tight">
                            {system.title}
                          </h3>
 
                          {/* Description */}
-                         <p className="text-gray-600 text-base lg:text-lg mb-8 lg:mb-10 leading-relaxed">
+                         <p className="text-gray-600 dark:text-gray-300 text-base lg:text-lg mb-8 lg:mb-10 leading-relaxed">
                            {system.description}
                          </p>
                          
@@ -355,7 +365,7 @@ const ModernApp = () => {
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                  </svg>
                                </div>
-                               <span className="text-gray-700 text-base lg:text-lg">{feature}</span>
+                               <span className="text-gray-700 dark:text-gray-200 text-base lg:text-lg">{feature}</span>
                              </div>
                            ))}
                          </div>
@@ -373,7 +383,7 @@ const ModernApp = () => {
                            </button>
                            <button 
                              onClick={() => openModal(system)}
-                             className="w-12 h-12 bg-white border border-gray-300 hover:bg-gray-100 hover:border-primary-500 text-gray-600 rounded-full transition-all duration-300 flex items-center justify-center shadow-lg"
+                             className="w-12 h-12 bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/20 text-gray-600 dark:text-gray-200 rounded-full transition-all duration-300 flex items-center justify-center shadow-lg"
                              title="Zobrazit galerii"
                            >
                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,9 +404,9 @@ const ModernApp = () => {
             {/* Previous button */}
             <button
               onClick={prevSlide}
-              className="w-12 h-12 bg-white border border-gray-300 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-300 shadow-lg"
+              className="w-12 h-12 bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/20 transition-all duration-300 shadow-lg"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -413,7 +423,7 @@ const ModernApp = () => {
                     className={`transition-all duration-300 ${
                       index === activeSlide 
                         ? 'w-8 h-3 bg-primary-500 rounded-full' 
-                        : 'w-3 h-3 bg-gray-300 rounded-full hover:bg-gray-400'
+                        : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500'
                     }`}
                   />
                 ))}
@@ -422,9 +432,9 @@ const ModernApp = () => {
             {/* Next button */}
             <button
               onClick={nextSlide}
-              className="w-12 h-12 bg-white border border-gray-300 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-300 shadow-lg"
+              className="w-12 h-12 bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/20 transition-all duration-300 shadow-lg"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>

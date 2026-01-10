@@ -118,16 +118,16 @@ const ConfiguratorSection = () => {
   }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
 
   return (
-    <section id="configurator" className="section-padding bg-gradient-to-b from-white to-gray-50">
+    <section id="configurator" className="section-padding bg-gradient-to-b from-white to-gray-50 dark:from-[#1f1f23] dark:to-[#1f1f23]">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 ${
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 ${
             animations.title ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Vyzkoušejte si <span className="text-primary-500">konfigurátor</span>
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${
+          <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed ${
             animations.subtitle ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
             Nakonfigurujte si svůj rezervační systém přesně podle svých představ. 
@@ -138,10 +138,10 @@ const ConfiguratorSection = () => {
         {/* Main Content - Video + CTA */}
         <div className="max-w-5xl mx-auto">
           {/* Video Container */}
-          <div className={`relative mb-12 rounded-3xl overflow-hidden shadow-2xl border border-gray-200 hover:shadow-3xl transition-all duration-500 ${
+          <div className={`relative mb-12 rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 hover:shadow-3xl transition-all duration-500 ${
             animations.image ? 'animate-fade-in-up' : 'pre-animate-hidden'
           }`}>
-            <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100">
+            <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900">
               {shouldLoadVideo && !videoError ? (
                 <video 
                   ref={videoRef}
@@ -162,19 +162,19 @@ const ConfiguratorSection = () => {
                 />
               ) : videoError ? (
                 // Fallback pokud video selže
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-800 dark:to-gray-900">
                   <div className="text-center p-8">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <p className="text-gray-600">Video se načítá...</p>
+                    <p className="text-gray-600 dark:text-gray-300">Video se načítá...</p>
                   </div>
                 </div>
               ) : (
                 // Placeholder před načtením
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900">
                   <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary-300 border-t-primary-500 rounded-full animate-spin"></div>
+                    <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary-300 dark:border-gray-600 border-t-primary-500 dark:border-t-primary-400 rounded-full animate-spin"></div>
                   </div>
                 </div>
               )}
@@ -200,7 +200,7 @@ const ConfiguratorSection = () => {
                 </svg>
               </span>
             </a>
-            <p className="text-gray-500 text-sm mt-4">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-4">
               Otevře se v novém okně
             </p>
           </div>

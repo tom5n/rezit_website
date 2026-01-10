@@ -145,7 +145,7 @@ const ClientLogos = () => {
     }
   }, [isVisible, clientLogos.length])
   return (
-    <section id="clients" className="py-24" style={{backgroundColor: '#e0efff'}}>
+    <section id="clients" className="py-24 bg-[#e0efff] dark:bg-[#18181c]">
       {/* Infinite Carousel - Full Width */}
       <div className={`w-full overflow-hidden transition-all duration-1000 ${
         isVisible ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
@@ -163,7 +163,7 @@ const ClientLogos = () => {
                 <img 
                   src={client.logo} 
                   alt={`Logo klienta ${client.name} - rezervační systém rezit`} 
-                  className="max-h-20 md:max-h-28 max-w-40 md:max-w-64 object-contain opacity-50 transition-all duration-300 hover:opacity-100 hover:scale-110"
+                  className="max-h-20 md:max-h-28 max-w-40 md:max-w-64 object-contain opacity-50 dark:invert transition-all duration-300 hover:opacity-100 hover:scale-110"
                 />
               </a>
             ))}

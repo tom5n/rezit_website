@@ -221,9 +221,9 @@ const Calculator = () => {
           animation: fade-in-up 0.6s ease-out forwards;
         }
       `}</style>
-      <section id="calculator" className="section-padding relative overflow-hidden">
+      <section id="calculator" className="section-padding relative overflow-hidden bg-[#eff6fe] dark:bg-[#18181c]">
       {/* Modern gradient background */}
-      <div className="absolute inset-0" style={{backgroundColor: '#eff6fe'}}>
+      <div className="absolute inset-0 dark:hidden">
         <div className="absolute top-1/4 -right-1/4 w-[400px] h-[400px] bg-primary-200 rounded-full opacity-20 blur-3xl"></div>
         <div className="absolute bottom-1/4 -left-1/4 w-[300px] h-[300px] bg-primary-300 rounded-full opacity-15 blur-3xl"></div>
       </div>
@@ -233,14 +233,14 @@ const Calculator = () => {
         <div className="text-center mb-20">
            <h2 
              data-animation="title"
-             className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
+             className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 transition-all duration-500 ${
                animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
              }`}
            >
              Spočítejte si <span className="text-primary-500">Vaše úspory</span>
            </h2>
            <p 
-             className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
+             className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
                animations.subtitle ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
              }`}
            >
@@ -257,15 +257,15 @@ const Calculator = () => {
         >
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
             {/* Input Form */}
-            <div className="bg-white/80 backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
-              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 mb-8">
+            <div className="bg-white/80 dark:bg-white/10 dark:backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-xl border border-white/20 dark:border-white/20 hover:shadow-2xl transition-all duration-300">
+              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 dark:text-white mb-8">
                 Vaše současné náklady
               </h3>
               
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Název Vašeho podniku (volitelné)
                     </label>
                     <div className="relative">
@@ -275,14 +275,14 @@ const Calculator = () => {
                         onChange={(e) => handleInputChange('businessName', e.target.value)}
                         onFocus={() => setFocusedField('businessName')}
                         onBlur={() => setFocusedField('')}
-                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white/10 dark:text-gray-100 ${
                           focusedField === 'businessName' 
-                            ? 'border-primary-500 bg-primary-50/50' 
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50/50 dark:bg-white/20 dark:border-primary-500' 
+                            : 'border-gray-200 dark:border-white/20 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                         placeholder="Např. Black Rose Barber"
                       />
-                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
@@ -290,15 +290,15 @@ const Calculator = () => {
 
                   <div className="relative">
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Velikost podniku <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Velikost podniku *
                       </label>
                       <div className="relative group">
-                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block z-50">
-                          <div className="bg-gray-800 text-white text-xs rounded-lg py-2 px-3 shadow-lg w-64">
+                          <div className="bg-gray-800 dark:bg-gray-700 text-white text-xs rounded-lg py-2 px-3 shadow-lg w-64">
                             <div className="mb-2">
                               <strong className="text-primary-300">Malý:</strong> 1-2 zaměstnanci, malý provoz
                             </div>
@@ -317,10 +317,10 @@ const Calculator = () => {
                       <button
                         type="button"
                         onClick={() => handleInputChange('businessSize', 'maly')}
-                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all bg-white dark:bg-white/10 dark:text-gray-100 ${
                           formData.businessSize === 'maly'
-                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-white/20 text-primary-700 dark:text-primary-400'
+                            : 'border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-200 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                       >
                         Malý
@@ -328,10 +328,10 @@ const Calculator = () => {
                       <button
                         type="button"
                         onClick={() => handleInputChange('businessSize', 'stredni')}
-                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all bg-white dark:bg-white/10 dark:text-gray-100 ${
                           formData.businessSize === 'stredni'
-                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-white/20 text-primary-700 dark:text-primary-400'
+                            : 'border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-200 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                       >
                         Střední
@@ -339,10 +339,10 @@ const Calculator = () => {
                       <button
                         type="button"
                         onClick={() => handleInputChange('businessSize', 'velky')}
-                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all ${
+                        className={`flex-1 px-2 py-4 rounded-xl border-2 transition-all bg-white dark:bg-white/10 dark:text-gray-100 ${
                           formData.businessSize === 'velky'
-                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-white/20 text-primary-700 dark:text-primary-400'
+                            : 'border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-200 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                       >
                         Velký
@@ -352,7 +352,7 @@ const Calculator = () => {
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                     Název používané služby (volitelné)
                   </label>
                   <div className="relative">
@@ -362,10 +362,10 @@ const Calculator = () => {
                       onChange={(e) => handleInputChange('serviceName', e.target.value)}
                       onFocus={() => setFocusedField('serviceName')}
                       onBlur={() => setFocusedField('')}
-                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white/10 dark:text-gray-100 ${
                         focusedField === 'serviceName' 
-                          ? 'border-primary-500 bg-primary-50/50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-primary-500 bg-primary-50/50 dark:bg-white/20 dark:border-primary-500' 
+                          : 'border-gray-200 dark:border-white/20 hover:border-gray-300 dark:hover:border-white/30'
                       }`}
                       placeholder="Např. Reservio, SimplyBook"
                     />
@@ -377,7 +377,7 @@ const Calculator = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Měsíční poplatek u konkurence (Kč) *
                     </label>
                     <div className="relative">
@@ -387,22 +387,22 @@ const Calculator = () => {
                         onChange={(e) => handleInputChange('monthlyFee', e.target.value)}
                         onFocus={() => setFocusedField('monthlyFee')}
                         onBlur={() => setFocusedField('')}
-                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white/10 dark:text-gray-100 ${
                           focusedField === 'monthlyFee' 
-                            ? 'border-primary-500 bg-primary-50/50' 
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50/50 dark:bg-white/20 dark:border-primary-500' 
+                            : 'border-gray-200 dark:border-white/20 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                         placeholder="Např. 2500"
                         required
                       />
-                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                     </div>
                   </div>
 
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Procentuální poplatek z plateb (%) *
                     </label>
                     <div className="relative">
@@ -413,15 +413,15 @@ const Calculator = () => {
                         onChange={(e) => handleInputChange('feePercentage', e.target.value)}
                         onFocus={() => setFocusedField('feePercentage')}
                         onBlur={() => setFocusedField('')}
-                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white/10 dark:text-gray-100 ${
                           focusedField === 'feePercentage' 
-                            ? 'border-primary-500 bg-primary-50/50' 
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50/50 dark:bg-white/20 dark:border-primary-500' 
+                            : 'border-gray-200 dark:border-white/20 hover:border-gray-300 dark:hover:border-white/30'
                         }`}
                         placeholder="Např. 2.9"
                         required
                       />
-                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                       </svg>
                     </div>
@@ -429,7 +429,7 @@ const Calculator = () => {
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                     Měsíční obrat přes rezervační systém (Kč) *
                   </label>
                   <div className="relative">
@@ -439,10 +439,10 @@ const Calculator = () => {
                       onChange={(e) => handleInputChange('monthlyRevenue', e.target.value)}
                       onFocus={() => setFocusedField('monthlyRevenue')}
                       onBlur={() => setFocusedField('')}
-                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 ${
+                      className={`w-full px-4 py-4 pl-12 border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white/10 dark:text-gray-100 ${
                         focusedField === 'monthlyRevenue' 
-                          ? 'border-primary-500 bg-primary-50/50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-primary-500 bg-primary-50/50 dark:bg-white/20 dark:border-primary-500' 
+                          : 'border-gray-200 dark:border-white/20 hover:border-gray-300 dark:hover:border-white/30'
                       }`}
                       placeholder="Např. 50000"
                       required
@@ -459,7 +459,7 @@ const Calculator = () => {
                    disabled={isLoading || !isFormValid()}
                    className={`w-full text-lg py-4 font-semibold rounded-full transition-colors duration-200 ${
                      isLoading || !isFormValid()
-                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                       ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
                        : 'bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white'
                    }`}
                  >
@@ -478,8 +478,8 @@ const Calculator = () => {
             </div>
 
              {/* Results */}
-             <div className="bg-white/80 backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 min-h-fit">
-              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 mb-8">
+             <div className="bg-white/80 dark:bg-white/10 dark:backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-xl border border-white/20 dark:border-white/20 hover:shadow-2xl transition-all duration-300 min-h-fit">
+              <h3 className="text-2xl sm:text-3xl font-heading font-semibold text-gray-800 dark:text-white mb-8">
                 Výsledky výpočtu
               </h3>
               
@@ -490,7 +490,7 @@ const Calculator = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="text-gray-500">Počítám vaše úspory...</p>
+                  <p className="text-gray-500 dark:text-gray-400">Počítám vaše úspory...</p>
                 </div>
                ) : isCalculated && results ? (
                  <div className="space-y-8">
@@ -499,44 +499,44 @@ const Calculator = () => {
                      {/* Návratnost */}
                      <div className="flex items-center justify-between py-4">
                        <div>
-                         <p className="text-sm font-medium text-gray-700 mb-1">Návratnost investice</p>
-                         <div className="text-2xl font-bold text-gray-900">
+                         <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Návratnost investice</p>
+                         <div className="text-2xl font-bold text-gray-900 dark:text-white">
                            {results.paybackMonths} měsíců
                          </div>
-                         <p className="text-xs text-gray-500 mt-1">
+                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                            Vaše investice se vám vrátí za {results.paybackMonths} {results.paybackMonths === 1 ? 'měsíc' : results.paybackMonths < 5 ? 'měsíce' : 'měsíců'}, pak už nic neplatíte
                          </p>
                        </div>
-                       <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
-                         <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <div className="w-16 h-16 bg-primary-100 dark:bg-primary-800/30 rounded-full flex items-center justify-center">
+                         <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                          </svg>
                        </div>
                      </div>
 
                      {/* Separator */}
-                     <div className="border-t border-gray-200"></div>
+                     <div className="border-t border-gray-200 dark:border-white/20"></div>
 
                      {/* Roční úspora - pouze pokud je pozitivní */}
                      {results.showSavings && (
                        <>
                          <div className="flex items-center justify-between py-4">
                            <div>
-                             <p className="text-sm font-medium text-gray-700 mb-1">Roční úspora</p>
-                             <div className="text-2xl font-bold text-gray-900">
+                             <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Roční úspora</p>
+                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                {Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč
                              </div>
-                             <p className="text-xs text-gray-500 mt-1">
+                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                Oproti měsíčním poplatkům ušetříte {Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč ročně
                              </p>
                            </div>
-                           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <div className="w-16 h-16 bg-green-100 dark:bg-green-800/30 rounded-full flex items-center justify-center">
+                             <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                              </svg>
                            </div>
                          </div>
-                         <div className="border-t border-gray-200"></div>
+                         <div className="border-t border-gray-200 dark:border-white/20"></div>
                        </>
                      )}
 
@@ -545,47 +545,47 @@ const Calculator = () => {
                        <>
                          <div className="flex items-center justify-between py-4">
                            <div>
-                             <p className="text-sm font-medium text-gray-700 mb-1">Úspora za 5 let</p>
-                             <div className="text-2xl font-bold text-gray-900">
+                             <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Úspora za 5 let</p>
+                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč
                              </div>
-                             <p className="text-xs text-gray-500 mt-1">
+                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                Za 5 let ušetříte {Math.round(results.fiveYearSavings).toLocaleString('cs-CZ')} Kč oproti měsíčním poplatkům
                              </p>
                            </div>
-                           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center">
+                             <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                              </svg>
                            </div>
                          </div>
-                         <div className="border-t border-gray-200"></div>
+                         <div className="border-t border-gray-200 dark:border-white/20"></div>
                        </>
                      )}
                    </div>
 
                    {/* Zpráva podle scénáře */}
                    {results.message && (
-                     <div className="p-4 bg-gray-50 rounded-xl text-left">
-                       <p className="text-gray-700 font-medium leading-relaxed">{results.message}</p>
+                     <div className="p-4 bg-gray-50 dark:bg-white/10 rounded-xl text-left">
+                       <p className="text-gray-700 dark:text-gray-200 font-medium leading-relaxed">{results.message}</p>
                      </div>
                    )}
 
                    {/* Srovnání s konkurencí */}
                    <div className="pt-4">
-                     <div className="space-y-2 text-sm text-gray-600">
+                     <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                        <p className="flex items-center gap-2">
-                         <span className="text-gray-400">•</span>
-                         <span>S konkurencí byste zaplatili: <span className="font-semibold text-gray-800">{Math.round(results.annualCompetitorCosts).toLocaleString('cs-CZ')} Kč</span> ročně</span>
+                         <span className="text-gray-400 dark:text-gray-500">•</span>
+                         <span>S konkurencí byste zaplatili: <span className="font-semibold text-gray-800 dark:text-white">{Math.round(results.annualCompetitorCosts).toLocaleString('cs-CZ')} Kč</span> ročně</span>
                        </p>
                        <p className="flex items-center gap-2">
-                         <span className="text-gray-400">•</span>
-                         <span>S námi zaplatíte: <span className="font-semibold text-gray-800">{Math.round(results.rezitPrice).toLocaleString('cs-CZ')} Kč</span> jednorázově</span>
+                         <span className="text-gray-400 dark:text-gray-500">•</span>
+                         <span>S námi zaplatíte: <span className="font-semibold text-gray-800 dark:text-white">{Math.round(results.rezitPrice).toLocaleString('cs-CZ')} Kč</span> jednorázově</span>
                        </p>
                        {results.showSavings && (
                          <p className="flex items-center gap-2">
-                           <span className="text-gray-400">•</span>
-                           <span>Úspora: <span className="font-semibold text-gray-800">{Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč</span> ročně</span>
+                           <span className="text-gray-400 dark:text-gray-500">•</span>
+                           <span>Úspora: <span className="font-semibold text-gray-800 dark:text-white">{Math.round(results.annualSavings).toLocaleString('cs-CZ')} Kč</span> ročně</span>
                          </p>
                        )}
                      </div>
@@ -619,12 +619,12 @@ const Calculator = () => {
                  </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 text-lg">Vyplňte formulář a výsledky se zobrazí automaticky</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">Vyplňte formulář a výsledky se zobrazí automaticky</p>
                 </div>
               )}
             </div>

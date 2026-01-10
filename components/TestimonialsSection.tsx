@@ -121,16 +121,16 @@ const TestimonialsSection = () => {
   }, [hasAnimated, baseDelay, threshold, rootMargin, isMobile])
 
   return (
-    <section id="testimonials" className="section-padding bg-white">
+    <section id="testimonials" className="section-padding bg-white dark:bg-[#1f1f23]">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-20">
-          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 mb-6 transition-all duration-500 ${
+          <h2 className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-heading font-bold text-gray-800 dark:text-white mb-6 transition-all duration-500 ${
             animations.title ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Co o nás říkají <span className="text-primary-500">naši klienti</span>?
           </h2>
-          <p className={`text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
+          <p className={`text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed transition-all duration-500 ${
             animations.subtitle ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
           }`}>
             Podívejte se, jak <span className="font-semibold">rezit</span> pomáhá podnikům šetřit peníze a čas.
@@ -146,9 +146,9 @@ const TestimonialsSection = () => {
             {/* Left Arrow */}
             <button
               onClick={() => setCurrentTestimonial(currentTestimonial === 0 ? testimonials.length - 1 : currentTestimonial - 1)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white border border-gray-300 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-300 shadow-lg z-10"
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-300 dark:border-white/20 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/20 transition-all duration-300 shadow-lg z-10"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -156,9 +156,9 @@ const TestimonialsSection = () => {
             {/* Right Arrow */}
             <button
               onClick={() => setCurrentTestimonial(currentTestimonial === testimonials.length - 1 ? 0 : currentTestimonial + 1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white border border-gray-300 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-300 shadow-lg z-10"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-white/10 dark:backdrop-blur-sm border border-gray-300 dark:border-white/20 hover:border-primary-500 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/20 transition-all duration-300 shadow-lg z-10"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -169,9 +169,9 @@ const TestimonialsSection = () => {
                 style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
               >
                 {testimonials.map((testimonial, index) => (
-                  <div key={testimonial.id} className="w-full flex-shrink-0 p-8 border border-gray-100 rounded-xl bg-white/50 flex flex-col min-h-[300px]">
+                  <div key={testimonial.id} className="w-full flex-shrink-0 p-8 border border-gray-100 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/10 dark:backdrop-blur-sm flex flex-col min-h-[300px]">
                     {/* Quote */}
-                    <blockquote className="text-2xl text-gray-800 leading-relaxed mb-8 italic font-light text-left flex-grow">
+                    <blockquote className="text-2xl text-gray-800 dark:text-gray-100 leading-relaxed mb-8 italic font-light text-left flex-grow">
                       "{testimonial.quote}"
                     </blockquote>
                     
@@ -179,7 +179,7 @@ const TestimonialsSection = () => {
                     <div className="flex items-center justify-between mt-auto">
                       {/* Left - Author */}
                       <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600">
                           <img 
                             src={testimonial.avatar} 
                             alt={`${testimonial.name} - recenze rezervačního systému rezit`}
@@ -187,10 +187,10 @@ const TestimonialsSection = () => {
                           />
                         </div>
                         <div className="text-left">
-                          <h4 className="font-heading font-bold text-gray-900 text-lg">
+                          <h4 className="font-heading font-bold text-gray-900 dark:text-white text-lg">
                             {testimonial.name}
                           </h4>
-                          <p className="text-primary-600 font-medium">
+                          <p className="text-primary-600 dark:text-primary-400 font-medium">
                             {testimonial.business}
                           </p>
                         </div>
@@ -201,7 +201,7 @@ const TestimonialsSection = () => {
                         <img 
                           src={testimonial.logo} 
                           alt={`Logo ${testimonial.business} - klient rezervačního systému rezit`}
-                          className="max-w-full max-h-full object-contain opacity-60"
+                          className="max-w-full max-h-full object-contain opacity-60 dark:invert"
                         />
                       </div>
                     </div>
@@ -214,15 +214,15 @@ const TestimonialsSection = () => {
           {/* Mobile Simple Layout - All 3 visible */}
           <div className="md:hidden space-y-6">
             {testimonials.map((testimonial, index) => (
-              <div key={testimonial.id} className="p-6 border border-gray-100 rounded-xl bg-white/50 flex flex-col min-h-[200px]">
+              <div key={testimonial.id} className="p-6 border border-gray-100 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/10 dark:backdrop-blur-sm flex flex-col min-h-[200px]">
                 {/* Quote */}
-                <blockquote className="text-lg text-gray-800 leading-relaxed mb-6 italic font-light text-left flex-grow">
+                <blockquote className="text-lg text-gray-800 dark:text-gray-100 leading-relaxed mb-6 italic font-light text-left flex-grow">
                   "{testimonial.quote}"
                 </blockquote>
                 
                 {/* Author - Always at bottom */}
                 <div className="flex items-center space-x-3 mt-auto">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600">
                     <img 
                       src={testimonial.avatar} 
                       alt={`${testimonial.name} - recenze rezervačního systému rezit`}
@@ -230,10 +230,10 @@ const TestimonialsSection = () => {
                     />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-heading font-bold text-gray-900 text-base">
+                    <h4 className="font-heading font-bold text-gray-900 dark:text-white text-base">
                       {testimonial.name}
                     </h4>
-                    <p className="text-primary-600 font-medium text-sm">
+                    <p className="text-primary-600 dark:text-primary-400 font-medium text-sm">
                       {testimonial.business}
                     </p>
                   </div>
@@ -251,7 +251,7 @@ const TestimonialsSection = () => {
                 className={`transition-all duration-300 ${
                   index === currentTestimonial 
                     ? 'w-8 h-3 bg-primary-500 rounded-full' 
-                    : 'w-3 h-3 bg-gray-300 rounded-full hover:bg-gray-400'
+                    : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500'
                 }`}
               />
             ))}
@@ -261,7 +261,7 @@ const TestimonialsSection = () => {
         {/* Stats Section */}
         <div className="text-center">
           {/* Desktop Stats */}
-          <div className="hidden md:flex justify-center items-center space-x-12 text-gray-600">
+          <div className="hidden md:flex justify-center items-center space-x-12 text-gray-600 dark:text-gray-300">
             {/* První statistika - zleva */}
             <div className={`transition-all duration-500 ${
               animations.statsLeft ? 'animate-slide-in-left' : 'opacity-0 -translate-x-8'
@@ -269,7 +269,7 @@ const TestimonialsSection = () => {
               <div className="text-2xl font-bold text-primary-500">10+</div>
               <p className="text-sm">Spokojených klientů</p>
             </div>
-            <div className="w-px h-8 bg-gray-300"></div>
+            <div className="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
             {/* Prostřední statistika - zdola */}
             <div className={`transition-all duration-500 ${
               animations.statsCenter ? 'animate-fade-in-up' : 'opacity-0 translate-y-8'
@@ -277,7 +277,7 @@ const TestimonialsSection = () => {
               <div className="text-2xl font-bold text-primary-500">50tis+</div>
               <p className="text-sm">Ušetřených korun</p>
             </div>
-            <div className="w-px h-8 bg-gray-300"></div>
+            <div className="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
             {/* Třetí statistika - zprava */}
             <div className={`transition-all duration-500 ${
               animations.statsRight ? 'animate-slide-in-right' : 'opacity-0 translate-x-8'
@@ -288,7 +288,7 @@ const TestimonialsSection = () => {
           </div>
 
           {/* Mobile Stats - Simple Grid */}
-          <div className="md:hidden grid grid-cols-3 gap-4 text-gray-600">
+          <div className="md:hidden grid grid-cols-3 gap-4 text-gray-600 dark:text-gray-300">
             {/* První statistika - zleva */}
             <div className={`text-center transition-all duration-500 ${
               animations.statsLeft ? 'animate-slide-in-left' : 'opacity-0 -translate-x-8'
