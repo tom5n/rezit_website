@@ -7,6 +7,7 @@ import { getTodosByProjectId, createTodo, updateTodo, deleteTodo, countTodosByPr
 import { getNotesByProjectId, createNote, updateNote, deleteNote, Note, NoteFormData } from '../lib/notes-db'
 import { getFinancesByProjectId, getAllFinances, createFinance, updateFinance, deleteFinance, Finance, FinanceFormData } from '../lib/finances-db'
 import { getFilesByProjectId, uploadFile, deleteFile, getFileUrl, ProjectFile, formatFileSize, getFileIcon } from '../lib/files-db'
+import { getAllInstallmentCalendars, getInstallmentCalendarsByProjectId, getInstallmentCalendarById, createInstallmentCalendar, updateInstallmentCalendar, updateInstallmentPayment, deleteInstallmentCalendar, InstallmentCalendar, InstallmentCalendarFormData, InstallmentPayment } from '../lib/installment-calendar-db'
 import { CalculatorSubmission } from '../lib/supabase'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, LabelList } from 'recharts'
 
@@ -19,9 +20,10 @@ const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'high' | 'medium' | 'low' | 'deleted' | 'favorite'>('all')
   const [activeContactTab, setActiveContactTab] = useState<'all' | 'resolved' | 'deleted'>('all')
-  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects' | 'finances'>('projects')
+  const [activeSection, setActiveSection] = useState<'calculator' | 'contact' | 'projects' | 'finances' | 'installments'>('projects')
   const [financePeriodFilter, setFinancePeriodFilter] = useState<'all' | 'half-year' | 'month'>('all')
   const [allFinances, setAllFinances] = useState<Finance[]>([])
+  const [allInstallmentCalendarsForFinances, setAllInstallmentCalendarsForFinances] = useState<{ calendar: InstallmentCalendar; payments: InstallmentPayment[] }[]>([])
   const [activeProjectFilter, setActiveProjectFilter] = useState<'all' | 'active' | 'completed'>('all')
   const [projects, setProjects] = useState<Project[]>([])
   const [projectPasswordCounts, setProjectPasswordCounts] = useState<{ [key: string]: number }>({})
@@ -33,6 +35,7 @@ const AdminDashboard = () => {
   const [projectNotes, setProjectNotes] = useState<Note[]>([])
   const [projectFinances, setProjectFinances] = useState<Finance[]>([])
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([])
+  const [projectInstallmentCalendars, setProjectInstallmentCalendars] = useState<{ calendar: InstallmentCalendar; payments: InstallmentPayment[] }[]>([])
   const [activeProjectTab, setActiveProjectTab] = useState<'todos' | 'passwords' | 'notes' | 'finances' | 'files'>('todos')
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
   const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null)
@@ -90,6 +93,21 @@ const AdminDashboard = () => {
     contact_methods: []
   })
   const [newContactMethod, setNewContactMethod] = useState<{ method: string; value: string }>({ method: '', value: '' })
+  const [installmentCalendars, setInstallmentCalendars] = useState<InstallmentCalendar[]>([])
+  const [installmentCalendarsWithPayments, setInstallmentCalendarsWithPayments] = useState<{ calendar: InstallmentCalendar; payments: InstallmentPayment[] }[]>([])
+  const [selectedInstallmentCalendar, setSelectedInstallmentCalendar] = useState<{ calendar: InstallmentCalendar; payments: InstallmentPayment[] } | null>(null)
+  const [isInstallmentModalOpen, setIsInstallmentModalOpen] = useState(false)
+  const [installmentFormData, setInstallmentFormData] = useState<InstallmentCalendarFormData>({
+    project_id: '',
+    client_name: '',
+    client_email: '',
+    client_phone: '',
+    total_amount: 0,
+    monthly_amount: 0,
+    months_count: 12,
+    start_date: new Date().toISOString().split('T')[0],
+    notes: ''
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -126,9 +144,10 @@ const AdminDashboard = () => {
         setError(result.error || 'Chyba při načítání kontaktních dat')
       }
     } else if (activeSection === 'finances') {
-      const [financesResult, projectsResult] = await Promise.all([
+      const [financesResult, projectsResult, calendarsResult] = await Promise.all([
         getAllFinances(),
-        getProjects()
+        getProjects(),
+        getAllInstallmentCalendars()
       ])
       
       if (financesResult.success) {
@@ -139,6 +158,39 @@ const AdminDashboard = () => {
       
       if (projectsResult.success) {
         setProjects(projectsResult.data)
+      }
+
+      // Načíst splátky pro všechny kalendáře
+      if (calendarsResult.success) {
+        const calendarsWithPayments = await Promise.all(
+          calendarsResult.data.map(async (calendar) => {
+            const calendarData = await getInstallmentCalendarById(calendar.id!)
+            if (calendarData.success && calendarData.data) {
+              return calendarData.data
+            }
+            return { calendar, payments: [] }
+          })
+        )
+        setAllInstallmentCalendarsForFinances(calendarsWithPayments)
+      }
+    } else if (activeSection === 'installments') {
+      const result = await getAllInstallmentCalendars()
+      
+      if (result.success) {
+        setInstallmentCalendars(result.data)
+        // Načíst splátky pro všechny kalendáře
+        const calendarsWithPayments = await Promise.all(
+          result.data.map(async (calendar) => {
+            const calendarData = await getInstallmentCalendarById(calendar.id!)
+            if (calendarData.success && calendarData.data) {
+              return calendarData.data
+            }
+            return { calendar, payments: [] }
+          })
+        )
+        setInstallmentCalendarsWithPayments(calendarsWithPayments)
+      } else {
+        setError(result.error || 'Chyba při načítání splátkových kalendářů')
       }
     } else if (activeSection === 'projects') {
       const result = await getProjects()
@@ -771,6 +823,24 @@ const AdminDashboard = () => {
     }
   }
 
+  // Funkce pro načtení splátkových kalendářů projektu
+  const loadProjectInstallmentCalendars = async (projectId: string) => {
+    const result = await getInstallmentCalendarsByProjectId(projectId)
+    if (result.success) {
+      // Načíst splátky pro všechny kalendáře
+      const calendarsWithPayments = await Promise.all(
+        result.data.map(async (calendar) => {
+          const calendarData = await getInstallmentCalendarById(calendar.id!)
+          if (calendarData.success && calendarData.data) {
+            return calendarData.data
+          }
+          return { calendar, payments: [] }
+        })
+      )
+      setProjectInstallmentCalendars(calendarsWithPayments)
+    }
+  }
+
   // Funkce pro otevření detailu projektu
   const openProjectDetail = async (project: Project) => {
     setSelectedProjectDetail(project)
@@ -780,6 +850,7 @@ const AdminDashboard = () => {
       await loadProjectNotes(project.id)
       await loadProjectFinances(project.id)
       await loadProjectFiles(project.id)
+      await loadProjectInstallmentCalendars(project.id)
     }
   }
 
@@ -791,6 +862,7 @@ const AdminDashboard = () => {
     setProjectNotes([])
     setProjectFinances([])
     setProjectFiles([])
+    setProjectInstallmentCalendars([])
   }
 
   // ==================== FUNKCE PRO SPRÁVU POZNÁMEK ====================
@@ -865,6 +937,67 @@ const AdminDashboard = () => {
     } else {
       alert('Chyba při mazání poznámky: ' + (result.error || 'Neznámá chyba'))
     }
+  }
+
+  // ==================== FUNKCE PRO SPRÁVU SPLÁTKOVÉHO KALENDÁŘE ====================
+
+  // Funkce pro uložení splátkového kalendáře
+  const handleSaveInstallmentCalendar = async () => {
+    if (!installmentFormData.project_id || !installmentFormData.client_name.trim() || !installmentFormData.total_amount || !installmentFormData.monthly_amount || !installmentFormData.months_count) {
+      alert('Prosím vyplňte všechny povinné údaje')
+      return
+    }
+
+    const result = await createInstallmentCalendar(installmentFormData)
+
+    if (result.success) {
+      setIsInstallmentModalOpen(false)
+      setInstallmentFormData({
+        project_id: '',
+        client_name: '',
+        client_email: '',
+        client_phone: '',
+        total_amount: 0,
+        monthly_amount: 0,
+        months_count: 12,
+        start_date: new Date().toISOString().split('T')[0],
+        notes: ''
+      })
+      // Obnovit data
+      const calendarsResult = await getAllInstallmentCalendars()
+      if (calendarsResult.success) {
+        setInstallmentCalendars(calendarsResult.data)
+        // Načíst splátky pro všechny kalendáře
+        const calendarsWithPayments = await Promise.all(
+          calendarsResult.data.map(async (calendar) => {
+            const calendarData = await getInstallmentCalendarById(calendar.id!)
+            if (calendarData.success && calendarData.data) {
+              return calendarData.data
+            }
+            return { calendar, payments: [] }
+          })
+        )
+        setInstallmentCalendarsWithPayments(calendarsWithPayments)
+      }
+    } else {
+      alert('Chyba při vytváření splátkového kalendáře: ' + (result.error || 'Neznámá chyba'))
+    }
+  }
+
+  // Funkce pro zavření modalu splátkového kalendáře
+  const closeInstallmentModal = () => {
+    setIsInstallmentModalOpen(false)
+    setInstallmentFormData({
+      project_id: '',
+      client_name: '',
+      client_email: '',
+      client_phone: '',
+      total_amount: 0,
+      monthly_amount: 0,
+      months_count: 12,
+      start_date: new Date().toISOString().split('T')[0],
+      notes: ''
+    })
   }
 
   // ==================== FUNKCE PRO SPRÁVU FINANCÍ ====================
@@ -1381,6 +1514,22 @@ const AdminDashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Výdělky
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setActiveSection('installments')}
+                className={`w-full text-left px-3 py-2 rounded-lg font-sans text-base transition-all duration-200 relative ${
+                  activeSection === 'installments' 
+                    ? 'bg-primary-100 text-primary-700 border-l-4 border-primary-500' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800 hover:border-l-4 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  Splátkový kalendář
                 </div>
               </button>
             </div>
@@ -1914,58 +2063,58 @@ const AdminDashboard = () => {
 
           {activeSection === 'finances' && (
             <div className="mb-6">
-              <div className="flex flex-row justify-between items-center md:items-start mb-4 gap-4">
+              {/* Header s reload a tagy vpravo */}
+              <div className="flex flex-row justify-between items-start mb-6 gap-4">
                 <div className="flex-1">
                   <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">Výdělky</h2>
                   <p className="text-base md:text-lg text-gray-600 font-sans">
                     Celkové výdělky ze všech projektů
                   </p>
                 </div>
-                <button
-                  onClick={loadData}
-                  className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
-                  title="Obnovit data"
-                >
-                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Filtry období */}
-              <div className="w-full overflow-x-hidden md:overflow-x-visible mb-6">
-                <div className="flex gap-3 overflow-x-auto pb-2 px-4 md:px-0 md:overflow-x-visible scrollbar-hide">
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {/* Filtry období */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFinancePeriodFilter('all')}
+                      className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                        financePeriodFilter === 'all' 
+                          ? 'bg-primary-500 text-white border-primary-500' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                      }`}
+                    >
+                      Celá doba
+                    </button>
+                    
+                    <button
+                      onClick={() => setFinancePeriodFilter('half-year')}
+                      className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                        financePeriodFilter === 'half-year' 
+                          ? 'bg-primary-500 text-white border-primary-500' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                      }`}
+                    >
+                      Půlrok
+                    </button>
+                    
+                    <button
+                      onClick={() => setFinancePeriodFilter('month')}
+                      className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
+                        financePeriodFilter === 'month' 
+                          ? 'bg-primary-500 text-white border-primary-500' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
+                      }`}
+                    >
+                      Měsíc
+                    </button>
+                  </div>
                   <button
-                    onClick={() => setFinancePeriodFilter('all')}
-                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
-                      financePeriodFilter === 'all' 
-                        ? 'bg-primary-500 text-white border-primary-500' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
-                    }`}
+                    onClick={loadData}
+                    className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
+                    title="Obnovit data"
                   >
-                    📅 Celá doba
-                  </button>
-                  
-                  <button
-                    onClick={() => setFinancePeriodFilter('half-year')}
-                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
-                      financePeriodFilter === 'half-year' 
-                        ? 'bg-primary-500 text-white border-primary-500' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
-                    }`}
-                  >
-                    📆 Poslední půlrok
-                  </button>
-                  
-                  <button
-                    onClick={() => setFinancePeriodFilter('month')}
-                    className={`px-5 py-3 rounded-full text-sm font-sans font-semibold transition-colors whitespace-nowrap flex-shrink-0 border ${
-                      financePeriodFilter === 'month' 
-                        ? 'bg-primary-500 text-white border-primary-500' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-300 hover:bg-primary-50'
-                    }`}
-                  >
-                    📆 Poslední měsíc
+                    <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -1992,11 +2141,41 @@ const AdminDashboard = () => {
                   })
                 }
 
-                // Výpočet celkového výdělku
-                const totalRevenue = filteredFinances.reduce((sum, f) => sum + (f.amount || 0), 0)
+                // Výpočet celkového výdělku z běžných financí
+                const totalRevenueFromFinances = filteredFinances.reduce((sum, f) => sum + (f.amount || 0), 0)
                 const totalHours = filteredFinances.reduce((sum, f) => sum + (f.hours || 0), 0)
                 const recordCount = filteredFinances.length
-                const avgRevenue = recordCount > 0 ? totalRevenue / recordCount : 0
+
+                // Výpočet celkového výdělku ze zaplacených splátek
+                let totalRevenueFromInstallments = 0
+                let installmentPaymentsCount = 0
+
+                // Filtrovat splátky podle období
+                allInstallmentCalendarsForFinances.forEach((calendarData) => {
+                  calendarData.payments.forEach((payment) => {
+                    if (payment.is_paid && payment.paid_date) {
+                      const paidDate = new Date(payment.paid_date)
+                      
+                      let includePayment = true
+                      if (financePeriodFilter === 'half-year') {
+                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+                        includePayment = paidDate >= sixMonthsAgo
+                      } else if (financePeriodFilter === 'month') {
+                        const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+                        includePayment = paidDate >= oneMonthAgo
+                      }
+
+                      if (includePayment) {
+                        totalRevenueFromInstallments += payment.amount
+                        installmentPaymentsCount++
+                      }
+                    }
+                  })
+                })
+
+                // Celkový výdělek = běžné finance + zaplacené splátky
+                const totalRevenue = totalRevenueFromFinances + totalRevenueFromInstallments
+                const avgRevenue = recordCount > 0 ? totalRevenueFromFinances / recordCount : 0
 
                 // Formátování částky
                 const formatCurrency = (amount: number) => {
@@ -2009,45 +2188,34 @@ const AdminDashboard = () => {
                 }
 
                 return (
-                  <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-6">
-                    <div className="text-center">
-                      <div className="mb-4">
-                        <h3 className="text-sm md:text-base font-sans font-semibold text-gray-600 mb-2">
-                          Celkový výdělek
-                        </h3>
-                        <div className="text-4xl md:text-5xl font-heading font-bold text-green-600 mb-2">
+                  <>
+                    {/* Statistiky - 3 karty vedle sebe */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      {/* Celkový výdělek */}
+                      <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                        <p className="text-2xl font-sans font-semibold text-gray-700 mb-6">Celkový výdělek</p>
+                        <p className="text-5xl font-heading font-bold text-gray-900">
                           {formatCurrency(totalRevenue)}
-                        </div>
+                        </p>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
-                        <div className="text-center">
-                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
-                            {recordCount}
-                          </div>
-                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
-                            {getPluralForm(recordCount, 'záznam', 'záznamy', 'záznamů')}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
-                            {formatCurrency(avgRevenue)}
-                          </div>
-                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
-                            Průměrný výdělek
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
-                            {totalHours.toFixed(1)}
-                          </div>
-                          <div className="text-sm md:text-base text-gray-600 font-sans mt-1">
-                            {getPluralForm(Math.round(totalHours), 'hodina', 'hodiny', 'hodin')}
-                          </div>
-                        </div>
+
+                      {/* Průměrný výdělek */}
+                      <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                        <p className="text-2xl font-sans font-semibold text-gray-700 mb-6">Průměrný výdělek</p>
+                        <p className="text-5xl font-heading font-bold text-gray-900">
+                          {formatCurrency(avgRevenue)}
+                        </p>
+                      </div>
+
+                      {/* Hodiny */}
+                      <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                        <p className="text-2xl font-sans font-semibold text-gray-700 mb-6">Odpracované hodiny</p>
+                        <p className="text-5xl font-heading font-bold text-gray-900">
+                          {totalHours.toFixed(1)} h
+                        </p>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )
               })()}
 
@@ -2085,6 +2253,29 @@ const AdminDashboard = () => {
                   }
                 })
 
+                // Přidat zaplacené splátky do výdělků podle projektu
+                allInstallmentCalendarsForFinances.forEach((calendarData) => {
+                  calendarData.payments.forEach((payment) => {
+                    if (payment.is_paid && payment.paid_date) {
+                      const paidDate = new Date(payment.paid_date)
+                      
+                      let includePayment = true
+                      if (financePeriodFilter === 'half-year') {
+                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+                        includePayment = paidDate >= sixMonthsAgo
+                      } else if (financePeriodFilter === 'month') {
+                        const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+                        includePayment = paidDate >= oneMonthAgo
+                      }
+
+                      if (includePayment && calendarData.calendar.project_id) {
+                        projectRevenueMap[calendarData.calendar.project_id] = 
+                          (projectRevenueMap[calendarData.calendar.project_id] || 0) + payment.amount
+                      }
+                    }
+                  })
+                })
+
                 const projectChartData = Object.entries(projectRevenueMap)
                   .map(([projectId, revenue]) => {
                     const project = projects.find(p => p.id === projectId)
@@ -2104,6 +2295,30 @@ const AdminDashboard = () => {
                     const projectName = project?.display_name || project?.name || 'Neznámý projekt'
                     projectTotalRevenueMap[projectName] = (projectTotalRevenueMap[projectName] || 0) + (f.amount || 0)
                   }
+                })
+
+                // Přidat zaplacené splátky do celkových výdělků podle projektu
+                allInstallmentCalendarsForFinances.forEach((calendarData) => {
+                  calendarData.payments.forEach((payment) => {
+                    if (payment.is_paid && payment.paid_date) {
+                      const paidDate = new Date(payment.paid_date)
+                      
+                      let includePayment = true
+                      if (financePeriodFilter === 'half-year') {
+                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+                        includePayment = paidDate >= sixMonthsAgo
+                      } else if (financePeriodFilter === 'month') {
+                        const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+                        includePayment = paidDate >= oneMonthAgo
+                      }
+
+                      if (includePayment && calendarData.calendar.project_id) {
+                        const project = projects.find(p => p.id === calendarData.calendar.project_id)
+                        const projectName = project?.display_name || project?.name || 'Neznámý projekt'
+                        projectTotalRevenueMap[projectName] = (projectTotalRevenueMap[projectName] || 0) + payment.amount
+                      }
+                    }
+                  })
                 })
 
                 // Vytvoříme data pro line chart - každý projekt je jeden bod s celkovým výdělkem
@@ -2145,30 +2360,32 @@ const AdminDashboard = () => {
                 const primaryBlue = '#3b82f6'
 
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {/* Pruhový graf - nejvýdělečnější projekty */}
-                    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-100">
-                      <h3 className="text-lg font-heading font-semibold text-gray-800 mb-4">
+                  <div className="space-y-6">
+                    {/* Pruhový graf - nejvýdělečnější projekty - na celou šířku */}
+                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                      <h3 className="text-xl font-heading font-semibold text-gray-800 mb-6">
                         Nejvýdělečnější projekty
                       </h3>
                       {projectChartData.length > 0 ? (
-                        <div className="w-full" style={{ height: '300px' }}>
+                        <div className="w-full" style={{ height: '400px' }}>
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
-                              data={projectChartData} 
+                              data={projectChartData.slice(0, 10)} 
                               layout="vertical"
-                              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                              margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                             >
                             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                             <XAxis 
                               type="number"
-                              tick={{ fontSize: 11, fill: '#6b7280' }}
-                              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k Kč`}
                             />
                             <YAxis 
                               type="category"
                               dataKey="name"
-                              hide={true}
+                              tick={{ fontSize: 12, fill: '#374151' }}
+                              width={120}
+                              tickLine={false}
                             />
                             <Tooltip 
                               content={<CustomTooltip />}
@@ -2177,50 +2394,53 @@ const AdminDashboard = () => {
                             <Bar 
                               dataKey="revenue" 
                               fill={primaryBlue} 
-                              radius={[0, 6, 6, 0]}
-                              barSize={20}
+                              radius={[0, 8, 8, 0]}
+                              barSize={35}
                             >
                               <LabelList 
-                                dataKey="name" 
-                                position="insideLeft"
-                                style={{ fill: '#ffffff', fontSize: '11px', fontWeight: '500', paddingLeft: '8px' }}
+                                dataKey="revenue" 
+                                position="right"
+                                style={{ fill: '#6b7280', fontSize: '12px', fontWeight: '500' }}
+                                formatter={(value: number) => formatCurrency(value)}
                               />
                             </Bar>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
                       ) : (
-                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                        <div className="h-[400px] flex items-center justify-center text-gray-500">
                           Žádná data k zobrazení
                         </div>
                       )}
                     </div>
 
-                    {/* Line graf s body - všechny výdělky podle projektu */}
-                    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-100">
-                      <h3 className="text-lg font-heading font-semibold text-gray-800 mb-4">
+                    {/* Line graf s body - všechny výdělky podle projektu - na celou šířku */}
+                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                      <h3 className="text-xl font-heading font-semibold text-gray-800 mb-6">
                         Celkový výdělek podle projektu ({lineChartData.length} projektů)
                       </h3>
                       {lineChartData.length > 0 ? (
-                        <div className="w-full" style={{ height: '300px' }}>
+                        <div className="w-full" style={{ height: '400px' }}>
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart 
                               data={lineChartData} 
-                              margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+                              margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
                             >
                               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                               <XAxis 
                                 type="number"
                                 dataKey="projectIndex"
                                 domain={[0, lineChartData.length - 1]}
-                                hide={true}
+                                tick={{ fontSize: 12, fill: '#6b7280' }}
+                                label={{ value: 'Projekty', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '12px' } }}
                               />
                               <YAxis 
                                 type="number"
                                 dataKey="revenue"
-                                tick={{ fontSize: 11, fill: '#6b7280' }}
+                                tick={{ fontSize: 12, fill: '#6b7280' }}
                                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                                width={60}
+                                width={70}
+                                label={{ value: 'Výdělek (Kč)', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '12px' } }}
                               />
                               <Tooltip 
                                 cursor={{ stroke: primaryBlue, strokeWidth: 2, strokeDasharray: '5 5' }}
@@ -2228,11 +2448,11 @@ const AdminDashboard = () => {
                                   if (active && payload && payload.length) {
                                     const data = payload[0].payload
                                     return (
-                                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                      <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
                                         <p className="text-sm font-semibold text-gray-800 mb-1">
                                           {data.projectName}
                                         </p>
-                                        <p className="text-sm text-primary-600 font-semibold mb-1">
+                                        <p className="text-base text-primary-600 font-bold">
                                           {formatCurrency(data.revenue)}
                                         </p>
                                       </div>
@@ -2245,15 +2465,15 @@ const AdminDashboard = () => {
                                 type="monotone"
                                 dataKey="revenue"
                                 stroke={primaryBlue}
-                                strokeWidth={2}
-                                dot={{ fill: primaryBlue, r: 5, strokeWidth: 2, stroke: '#fff' }}
-                                activeDot={{ r: 7, fill: primaryBlue }}
+                                strokeWidth={3}
+                                dot={{ fill: primaryBlue, r: 6, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 8, fill: primaryBlue, stroke: '#fff', strokeWidth: 2 }}
                               />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
                       ) : (
-                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                        <div className="h-[400px] flex items-center justify-center text-gray-500">
                           Žádná data k zobrazení
                         </div>
                       )}
@@ -2261,6 +2481,266 @@ const AdminDashboard = () => {
                   </div>
                 )
               })()}
+            </div>
+          )}
+
+          {activeSection === 'installments' && !selectedInstallmentCalendar && (
+            <div className="mb-6">
+              <div className="flex flex-row justify-between items-center md:items-start mb-4 gap-4">
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">Splátkový kalendář</h2>
+                  <p className="text-base md:text-lg text-gray-600 font-sans">
+                    Přehled všech klientů se splátkovým plánem
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setInstallmentFormData({
+                        project_id: '',
+                        client_name: '',
+                        client_email: '',
+                        client_phone: '',
+                        total_amount: 0,
+                        monthly_amount: 0,
+                        months_count: 12,
+                        start_date: new Date().toISOString().split('T')[0],
+                        notes: ''
+                      })
+                      setIsInstallmentModalOpen(true)
+                    }}
+                    className="px-4 py-2 md:py-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center gap-2 flex-shrink-0"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Přidat klienta
+                  </button>
+                  <button
+                    onClick={loadData}
+                    className="p-2 md:p-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center justify-center flex-shrink-0 self-center md:self-start"
+                    title="Obnovit data"
+                  >
+                    <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Přehled klientů - seznam */}
+              {installmentCalendars.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow">
+                  <p className="text-gray-500">Žádní klienti se splátkovým plánem</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {installmentCalendarsWithPayments.map((calendarData) => {
+                    const calendar = calendarData.calendar
+                    const paidCount = calendarData.payments.filter(p => p.is_paid).length
+                    const totalCount = calendar.months_count
+                    const progress = totalCount > 0 ? (paidCount / totalCount) * 100 : 0
+                    const remainingAmount = calendar.total_amount - (paidCount * calendar.monthly_amount)
+                    const project = projects.find(p => p.id === calendar.project_id)
+
+                    return (
+                      <div
+                        key={calendar.id}
+                        className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setSelectedInstallmentCalendar(calendarData)
+                        }}
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-heading font-semibold text-gray-800 mb-1">
+                              {calendar.client_name}
+                            </h3>
+                            <p className="text-base text-gray-600 font-sans">
+                              {project?.display_name || project?.name || 'Neznámý projekt'}
+                              {calendar.client_email && ` • ${calendar.client_email}`}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="px-4 py-2 rounded-full text-sm font-sans font-semibold bg-primary-100 text-primary-700">
+                              {paidCount} / {totalCount} měsíců
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                          <div>
+                            <p className="text-sm text-gray-600 font-sans mb-1">Celková částka</p>
+                            <p className="text-lg font-heading font-semibold text-gray-800">
+                              {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(calendar.total_amount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 font-sans mb-1">Měsíční splátka</p>
+                            <p className="text-lg font-heading font-semibold text-gray-800">
+                              {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(calendar.monthly_amount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 font-sans mb-1">Zaplaceno</p>
+                            <p className="text-lg font-heading font-semibold text-green-600">
+                              {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(calendar.total_amount - remainingAmount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 font-sans mb-1">Zbývá</p>
+                            <p className="text-lg font-heading font-semibold text-red-600">
+                              {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(remainingAmount)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex justify-between text-xs text-gray-600 mb-2">
+                            <span>Průběh splácení</span>
+                            <span>{Math.round(progress)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-primary-500 h-2 rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSection === 'installments' && selectedInstallmentCalendar && (
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={() => setSelectedInstallmentCalendar(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold text-gray-800">
+                    {selectedInstallmentCalendar.calendar.client_name}
+                  </h2>
+                  <p className="text-base text-gray-600">
+                    Splátkový plán: {selectedInstallmentCalendar.calendar.months_count} měsíců
+                  </p>
+                </div>
+              </div>
+
+              {/* Detail splátek */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Celková částka</p>
+                      <p className="text-xl font-bold text-gray-800">
+                        {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(selectedInstallmentCalendar.calendar.total_amount)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Měsíční splátka</p>
+                      <p className="text-xl font-bold text-gray-800">
+                        {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(selectedInstallmentCalendar.calendar.monthly_amount)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Zaplaceno</p>
+                      <p className="text-xl font-bold text-green-600">
+                        {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(
+                          selectedInstallmentCalendar.payments.filter(p => p.is_paid).reduce((sum, p) => sum + p.amount, 0)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-lg font-heading font-bold text-gray-800 mb-4">Měsíční splátky</h3>
+                  {selectedInstallmentCalendar.payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                        payment.is_paid
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-white border-gray-200 hover:border-primary-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={payment.is_paid}
+                          onChange={async (e) => {
+                            const result = await updateInstallmentPayment(
+                              payment.id!,
+                              e.target.checked,
+                              e.target.checked ? new Date().toISOString().split('T')[0] : undefined
+                            )
+                            if (result.success) {
+                              // Obnovit data
+                              const updated = await getInstallmentCalendarById(selectedInstallmentCalendar.calendar.id!)
+                              if (updated.success && updated.data) {
+                                setSelectedInstallmentCalendar(updated.data)
+                                // Také aktualizovat v přehledu
+                                setInstallmentCalendarsWithPayments(prev => 
+                                  prev.map(item => 
+                                    item.calendar.id === updated.data!.calendar.id 
+                                      ? updated.data! 
+                                      : item
+                                  )
+                                )
+                                // Pokud jsme v sekci finances, obnovit i tam data
+                                if (activeSection === 'finances') {
+                                  const calendarsResult = await getAllInstallmentCalendars()
+                                  if (calendarsResult.success) {
+                                    const calendarsWithPayments = await Promise.all(
+                                      calendarsResult.data.map(async (calendar) => {
+                                        const calendarData = await getInstallmentCalendarById(calendar.id!)
+                                        if (calendarData.success && calendarData.data) {
+                                          return calendarData.data
+                                        }
+                                        return { calendar, payments: [] }
+                                      })
+                                    )
+                                    setAllInstallmentCalendarsForFinances(calendarsWithPayments)
+                                  }
+                                }
+                              }
+                            }
+                          }}
+                          className="w-5 h-5 text-primary-500 rounded focus:ring-primary-500 cursor-pointer"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            Měsíc {payment.month_number}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Splatnost: {new Date(payment.due_date).toLocaleDateString('cs-CZ')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-800">
+                          {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(payment.amount)}
+                        </p>
+                        {payment.is_paid && payment.paid_date && (
+                          <p className="text-xs text-green-600">
+                            Zaplaceno: {new Date(payment.paid_date).toLocaleDateString('cs-CZ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -3497,18 +3977,76 @@ const AdminDashboard = () => {
                     const totalAmount = filteredFinances.reduce((sum, f) => sum + (f.amount || 0), 0)
                     const totalHours = filteredFinances.reduce((sum, f) => sum + (f.hours || 0), 0)
 
-                    if (filteredFinances.length === 0) {
-                      return (
-                        <div className="text-center py-12 bg-white rounded-lg shadow">
-                          <p className="text-gray-500">
-                            {financeSearchQuery ? 'Žádné finanční záznamy neodpovídají vyhledávání' : 'Žádné finanční záznamy pro tento projekt'}
-                          </p>
-                        </div>
-                      )
-                    }
-
                     return (
                       <div>
+                        {/* Splátkové kalendáře */}
+                        {projectInstallmentCalendars.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-lg font-heading font-bold text-gray-800 mb-4">Splátkové plány</h3>
+                            <div className="space-y-3">
+                              {projectInstallmentCalendars.map((calendarData) => {
+                                const calendar = calendarData.calendar
+                                const paidCount = calendarData.payments.filter(p => p.is_paid).length
+                                const totalCount = calendar.months_count
+                                const paidAmount = calendarData.payments.filter(p => p.is_paid).reduce((sum, p) => sum + p.amount, 0)
+                                const remainingAmount = calendar.total_amount - paidAmount
+                                const progress = totalCount > 0 ? (paidCount / totalCount) * 100 : 0
+
+                                return (
+                                  <div
+                                    key={calendar.id}
+                                    className="bg-white rounded-lg shadow p-4 border-l-4 border-primary-500"
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div>
+                                        <h4 className="font-heading font-bold text-gray-800">{calendar.client_name}</h4>
+                                        <p className="text-sm text-gray-600">
+                                          {calendar.months_count} měsíců × {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(calendar.monthly_amount)}
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          setActiveSection('installments')
+                                          setSelectedInstallmentCalendar(calendarData)
+                                        }}
+                                        className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-semibold"
+                                      >
+                                        Otevřít kalendář
+                                      </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Zaplaceno:</span>
+                                        <span className="font-semibold text-green-600">
+                                          {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(paidAmount)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Zbývá:</span>
+                                        <span className="font-semibold text-red-600">
+                                          {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(remainingAmount)}
+                                        </span>
+                                      </div>
+                                      <div className="pt-2">
+                                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                                          <span>Průběh: {paidCount} / {totalCount} měsíců</span>
+                                          <span>{Math.round(progress)}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                          <div
+                                            className="bg-primary-500 h-2 rounded-full transition-all"
+                                            style={{ width: `${progress}%` }}
+                                          ></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Souhrn */}
                         {(totalAmount > 0 || totalHours > 0) && (
                           <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg p-4 mb-4 border border-primary-200">
@@ -3526,6 +4064,14 @@ const AdminDashboard = () => {
                                 </div>
                               )}
                             </div>
+                          </div>
+                        )}
+
+                        {filteredFinances.length === 0 && projectInstallmentCalendars.length === 0 && (
+                          <div className="text-center py-12 bg-white rounded-lg shadow">
+                            <p className="text-gray-500">
+                              {financeSearchQuery ? 'Žádné finanční záznamy neodpovídají vyhledávání' : 'Žádné finanční záznamy pro tento projekt'}
+                            </p>
                           </div>
                         )}
 
@@ -4544,6 +5090,220 @@ const AdminDashboard = () => {
                   className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
                 >
                   {selectedFinance ? 'Uložit změny' : 'Přidat finanční záznam'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Installment Calendar Modal - Add */}
+      {isInstallmentModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          onClick={closeInstallmentModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-heading font-bold text-gray-800">
+                Přidat nového klienta do splátkového kalendáře
+              </h2>
+              <button
+                onClick={closeInstallmentModal}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-6 space-y-4">
+              {/* Project Selection */}
+              <div>
+                <label htmlFor="installment-project" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Projekt <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="installment-project"
+                  value={installmentFormData.project_id}
+                  onChange={(e) => setInstallmentFormData({ ...installmentFormData, project_id: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  required
+                >
+                  <option value="">Vyberte projekt</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.display_name || project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Client Name */}
+              <div>
+                <label htmlFor="installment-client-name" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Jméno klienta <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="installment-client-name"
+                  value={installmentFormData.client_name}
+                  onChange={(e) => setInstallmentFormData({ ...installmentFormData, client_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  placeholder="Např. Jan Novák"
+                  required
+                />
+              </div>
+
+              {/* Client Email and Phone */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="installment-client-email" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Email (volitelné)
+                  </label>
+                  <input
+                    type="email"
+                    id="installment-client-email"
+                    value={installmentFormData.client_email || ''}
+                    onChange={(e) => setInstallmentFormData({ ...installmentFormData, client_email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="jan.novak@email.cz"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installment-client-phone" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Telefon (volitelné)
+                  </label>
+                  <input
+                    type="tel"
+                    id="installment-client-phone"
+                    value={installmentFormData.client_phone || ''}
+                    onChange={(e) => setInstallmentFormData({ ...installmentFormData, client_phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="+420 123 456 789"
+                  />
+                </div>
+              </div>
+
+              {/* Total Amount and Monthly Amount */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="installment-total-amount" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Celková částka (Kč) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="installment-total-amount"
+                    value={installmentFormData.total_amount || ''}
+                    onChange={(e) => {
+                      const total = parseFloat(e.target.value) || 0
+                      const months = installmentFormData.months_count || 1
+                      setInstallmentFormData({ 
+                        ...installmentFormData, 
+                        total_amount: total,
+                        monthly_amount: months > 0 ? Math.ceil(total / months) : 0
+                      })
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installment-monthly-amount" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Měsíční splátka (Kč) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="installment-monthly-amount"
+                    value={installmentFormData.monthly_amount || ''}
+                    onChange={(e) => setInstallmentFormData({ ...installmentFormData, monthly_amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Months Count and Start Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="installment-months" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Počet měsíců <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="installment-months"
+                    value={installmentFormData.months_count || ''}
+                    onChange={(e) => {
+                      const months = parseInt(e.target.value) || 1
+                      const total = installmentFormData.total_amount || 0
+                      setInstallmentFormData({ 
+                        ...installmentFormData, 
+                        months_count: months,
+                        monthly_amount: months > 0 ? Math.ceil(total / months) : 0
+                      })
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    placeholder="12"
+                    min="1"
+                    max="60"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installment-start-date" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                    Datum začátku <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="installment-start-date"
+                    value={installmentFormData.start_date}
+                    onChange={(e) => setInstallmentFormData({ ...installmentFormData, start_date: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label htmlFor="installment-notes" className="block text-sm font-sans font-medium text-gray-700 mb-2">
+                  Poznámky (volitelné)
+                </label>
+                <textarea
+                  id="installment-notes"
+                  value={installmentFormData.notes || ''}
+                  onChange={(e) => setInstallmentFormData({ ...installmentFormData, notes: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors font-sans"
+                  placeholder="Další informace k splátkovému plánu..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={closeInstallmentModal}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={handleSaveInstallmentCalendar}
+                  className="flex-1 px-4 py-3 bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors font-sans font-semibold"
+                >
+                  Vytvořit splátkový plán
                 </button>
               </div>
             </div>
