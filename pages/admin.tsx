@@ -2697,21 +2697,19 @@ const AdminDashboard = () => {
                                       : item
                                   )
                                 )
-                                // Pokud jsme v sekci finances, obnovit i tam data
-                                if (activeSection === 'finances') {
-                                  const calendarsResult = await getAllInstallmentCalendars()
-                                  if (calendarsResult.success) {
-                                    const calendarsWithPayments = await Promise.all(
-                                      calendarsResult.data.map(async (calendar) => {
-                                        const calendarData = await getInstallmentCalendarById(calendar.id!)
-                                        if (calendarData.success && calendarData.data) {
-                                          return calendarData.data
-                                        }
-                                        return { calendar, payments: [] }
-                                      })
-                                    )
-                                    setAllInstallmentCalendarsForFinances(calendarsWithPayments)
-                                  }
+                                // Aktualizovat data pro sekci finances (vždy, protože změna splátky ovlivňuje výdělky)
+                                const calendarsResult = await getAllInstallmentCalendars()
+                                if (calendarsResult.success) {
+                                  const calendarsWithPayments = await Promise.all(
+                                    calendarsResult.data.map(async (calendar) => {
+                                      const calendarData = await getInstallmentCalendarById(calendar.id!)
+                                      if (calendarData.success && calendarData.data) {
+                                        return calendarData.data
+                                      }
+                                      return { calendar, payments: [] }
+                                    })
+                                  )
+                                  setAllInstallmentCalendarsForFinances(calendarsWithPayments)
                                 }
                               }
                             }
