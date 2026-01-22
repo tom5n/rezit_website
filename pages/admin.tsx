@@ -2401,7 +2401,7 @@ const AdminDashboard = () => {
                                 dataKey="revenue" 
                                 position="right"
                                 style={{ fill: '#6b7280', fontSize: '12px', fontWeight: '500' }}
-                                formatter={(value: number) => formatCurrency(value)}
+                                formatter={(value: any) => formatCurrency(typeof value === 'number' ? value : 0)}
                               />
                             </Bar>
                             </BarChart>
